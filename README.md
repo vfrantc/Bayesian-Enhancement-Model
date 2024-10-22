@@ -18,7 +18,7 @@ This is the official code for the paper [Bayesian Enhancement Models for One-to-
 
 ## News 💡
 
-- **2024.10.21** Code has been released. We train each model multiple times and report the median of the test results. Therefore, the results you obtain may be higher than those reported in the paper.  If you encounter any difficulties in reproducing our work, please contact us. We look forward to seeing future developments based on the Bayesian Enhancement Model ✨
+- **2024.10.21** Code has been released. We train each model multiple times and report the median of the test results. Therefore, the results you obtain may be higher than those reported in the paper. If you encounter any difficulties in reproducing our work, please issue them. We look forward to seeing future developments based on the Bayesian Enhancement Model ✨
 
 
 ## HD Visulisation
