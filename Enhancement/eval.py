@@ -81,6 +81,8 @@ cond_checkpoint = torch.load(cond_weights)
 
 scale_factor = opt['condition'].get('scale_down', 0) + opt['condition'].get('hist_patch_size', 0)
 
+if args.deterministic:
+    args.num_samples = 1
 
 net.load_state_dict(checkpoint['params'])
 print("Loaded weights from", weights)
