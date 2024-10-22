@@ -7,8 +7,6 @@ This is the official code for the paper [Bayesian Enhancement Models for One-to-
 &nbsp;      
   
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-lol)](https://paperswithcode.com/sota/low-light-image-enhancement-on-lol?p=bayesian-enhancement-models-for-one-to-many)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-lol-v2)](https://paperswithcode.com/sota/low-light-image-enhancement-on-lol-v2?p=bayesian-enhancement-models-for-one-to-many)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-lol-v2-1)](https://paperswithcode.com/sota/low-light-image-enhancement-on-lol-v2-1?p=bayesian-enhancement-models-for-one-to-many)
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-dicm)](https://paperswithcode.com/sota/low-light-image-enhancement-on-dicm?p=bayesian-enhancement-models-for-one-to-many)	
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-lime)](https://paperswithcode.com/sota/low-light-image-enhancement-on-lime?p=bayesian-enhancement-models-for-one-to-many)
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-mef)](https://paperswithcode.com/sota/low-light-image-enhancement-on-mef?p=bayesian-enhancement-models-for-one-to-many)
