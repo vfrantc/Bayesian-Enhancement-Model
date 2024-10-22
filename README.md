@@ -26,7 +26,7 @@ This is the official code for the paper [Bayesian Enhancement Models for One-to-
 
 ##  Proposed Bayesian Enhancement Model
 
-### DDN vs BNN:
+### Deterministic NN vs Bayesian NN:
 <p align="center"> <img src='./assets/dnnvsbnn.png' align="center" > </p>
 
 ### Two-Stage Pipeline:
