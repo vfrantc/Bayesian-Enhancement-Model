@@ -256,7 +256,25 @@ class DCNv2Pack(ModulatedDeformConvPack):
                                      self.stride, self.padding, self.dilation,
                                      self.groups, self.deformable_groups)
 
+class conv(nn.Module):
+    def __init__(
+        self, in_channel, out_channel, kernel_size, dilation_rate=1, padding=0, stride=1
+    ):
+        super(conv, self).__init__()
+        self.conv = nn.Conv2d(
+            in_channels=in_channel,
+            out_channels=out_channel,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            bias=True,
+            dilation=dilation_rate,
+        )
 
+    def forward(self, x_input):
+        out = self.conv(x_input)
+        return out
+        
 class conv_relu(nn.Module):
     def __init__(
         self, in_channel, out_channel, kernel_size, dilation_rate=1, padding=0, stride=1

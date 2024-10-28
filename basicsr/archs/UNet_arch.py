@@ -52,26 +52,6 @@ def trunc_normal_(
     return _no_grad_trunc_normal_(tensor, mean, std, a, b)
 
 
-
-class conv(nn.Module):
-    def __init__(
-        self, in_channel, out_channel, kernel_size, dilation_rate=1, padding=0, stride=1
-    ):
-        super(conv, self).__init__()
-        self.conv = nn.Conv2d(
-            in_channels=in_channel,
-            out_channels=out_channel,
-            kernel_size=kernel_size,
-            stride=stride,
-            padding=padding,
-            bias=True,
-            dilation=dilation_rate,
-        )
-
-    def forward(self, x_input):
-        out = self.conv(x_input)
-        return out
-
 def conv_down(in_channels):
     return nn.Conv2d(in_channels, in_channels * 2, 4, 2, 1, bias=False)
 

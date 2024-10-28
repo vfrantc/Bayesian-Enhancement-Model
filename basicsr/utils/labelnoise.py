@@ -51,6 +51,7 @@ def adjust_brightness_nonlinear(image, gamma):
     img_nonlinear = np.clip(img_nonlinear, 0, 1)
     return img_nonlinear
 
+
 def add_label_noise(image_np,
                     tem_mean=1, tem_var=0.03,
                     bright_mean=1.15, bright_var=0.15,
