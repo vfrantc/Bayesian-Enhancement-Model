@@ -62,7 +62,7 @@ network_g:
   mlp_type: gdmlp
   use_pixelshuffle: true
   drop_path: 0.
-  sam: true
+  sam: false
   stage: 1
   num_blocks: [2,2,2]
 
