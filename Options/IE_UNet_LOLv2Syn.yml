@@ -18,7 +18,7 @@ datasets:
     dataroot_lq: /mnt/e/datasets/LOLv2/Synthetic/Train/Low
     geometric_augs: true
     condition: *condition
-    mim
+    mim:
       mask_ratio: 0.75
       mask_patch_size: 1
       model_patch_size: 1
