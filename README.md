@@ -75,7 +75,7 @@ This is the official code for the paper [Bayesian Enhancement Models for One-to-
 #### Create Conda Environment
 
 ```bash
-conda create --n BEM python=3.10.12
+conda create -n BEM python=3.10.12
 conda activate BEM
 ```
 
