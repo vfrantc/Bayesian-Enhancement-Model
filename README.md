@@ -88,7 +88,7 @@ git clone git@github.com:Anonymous1563/Bayesian-Enhancement-Model.git
 #### Install Dependencies
 
 ```bash
-cd BEM
+cd Bayesian-Enhancement-Model
 pip install -r requirements.txt
 
 ```
