@@ -15,7 +15,7 @@ This is the official code for the paper [Bayesian Enhancement Models for One-to-
 
 
 ## News 💡
-- **2024.10.31** Masked Image Modeling (MIM) is implemented to enhance our Stage-II network. We haven’t evaluated its effectiveness and nor does our team currently plan to include MIM in this paper or develop new papers on it. We welcome anyone interested in continuing this research and invite discussions.
+- **2024.10.31** Masked Image Modeling (MIM) is implemented to enhance our Stage-II network. We haven’t evaluated its effectiveness, and our team has no future plan to inlcude MIM into the current paper or draw new papers for it. We welcome anyone interested in continuing this research and invite discussions.
 - **2024.10.31** The model checkpoints trained on LOLv1 is released.  
 - **2024.10.21** Code has been released. We train each model multiple times and report the median of the test results. Therefore, the results you obtain may be higher than those reported in the paper. If you encounter any difficulties in reproducing our work, please issue them. We look forward to seeing future developments based on the Bayesian Enhancement Model ✨
 
