@@ -34,6 +34,7 @@ This is the official code for the paper [Bayesian Enhancement Models for One-to-
 
 
 ## Results
+#### We released the pre-trained models and visual resutls [Here](https://github.com/Anonymous1563/Bayesian-Enhancement-Model/releases/tag/checkpoints_%26_visual_results)
 <details close>
 <summary><b>Performance on LOL-v1, LOL-v2-real and LOL-v2-syn:</b></summary>
 
@@ -120,9 +121,6 @@ Download the LIME, NPE, MEF, DICM, and VV datasets from [here](https://daooshee.
 Download UIEB datasets from [here](https://li-chongyi.github.io/proj_benchmark.html).
 &nbsp;
 
-
-## Pre-trained Models
-Coming Soon ...
 
 ## Full-Reference Evaluation
 
