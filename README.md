@@ -32,9 +32,12 @@ This is the official code for the paper [Bayesian Enhancement Models for One-to-
 <p align="center"> <img src='./assets/pipeline.png' align="center" > </p>
 
 
+## Checkpoints
+#### We released the pre-trained models [Here](https://github.com/Anonymous1563/Bayesian-Enhancement-Model/releases/tag/checkpoints_%26_visual_results)
+
 
 ## Results
-#### We released the pre-trained models and visual resutls [Here](https://github.com/Anonymous1563/Bayesian-Enhancement-Model/releases/tag/checkpoints_%26_visual_results)
+#### We released our enhanced images for all the datasets used in the paper [Here](https://github.com/Anonymous1563/Bayesian-Enhancement-Model/releases/tag/checkpoints_%26_visual_results)
 <details close>
 <summary><b>Performance on LOL-v1, LOL-v2-real and LOL-v2-syn:</b></summary>
 
