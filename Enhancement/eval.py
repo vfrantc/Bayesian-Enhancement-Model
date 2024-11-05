@@ -43,11 +43,12 @@ parser.add_argument('--Monte_Carlo', action='store_true', help='use Monte Carlo 
                     when the smaple number is very large, Monte Carlo Simulation is equal to the deterministic model')
 parser.add_argument('--psnr_weight', default=1.0, type=float, help='Balance between PSNR and SSIM')
 parser.add_argument('--no_ref', default='', type=str, choices=['clip', 'niqe', 'uiqm_uciqe'], help='no reference image quality evaluator. \
-                    support CLIP-IQA, NIQE, UIQM and UCIQE')
+                    support CLIP-IQA and NIQE')
 parser.add_argument('--uiqm_weight', default=1.0, type=float, help='Balance between UIQM and UICIQE')
 parser.add_argument('--lpips', action='store_true', help='True to compute LPIPS')
 parser.add_argument('--deterministic', action='store_true', help='Use deterministic mode')
-parser.add_argument('--samples_per_split', default=8, type=int, help='Adjust this to 1 if you encounter CUDA OOM issues')
+parser.add_argument('--parallel_num', default=1, type=int, help='Acceleartion by increasing the parallen processing samples. \
+                     Adjust this to 1 if you encounter CUDA OOM issues')
 parser.add_argument('--seed', default=287128, type=int, help='fix random seed to reproduce consistent resutls')
 
 args = parser.parse_args()
@@ -99,7 +100,6 @@ cond_net.cuda()
 cond_net = nn.DataParallel(cond_net)
 cond_net.eval()
 
-samples_per_split = args.samples_per_split
 dataset = args.dataset
 config = os.path.basename(args.opt).split('.')[0]
 checkpoint_name = os.path.basename(args.weights).split('.')[0]
@@ -217,7 +217,7 @@ with torch.inference_mode():
 
         input_expended = input_.tile(args.num_samples, 1, 1, 1)
         cat_input = torch.cat([input_expended, one_pred_conds], dim=1)
-        split_input = cat_input.split(samples_per_split)
+        split_input = cat_input.split(args.parallel_num)
 
         one_preds = []
         for split in split_input:
