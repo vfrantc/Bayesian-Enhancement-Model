@@ -43,10 +43,11 @@ parser.add_argument('--Monte_Carlo', action='store_true', help='use Monte Carlo 
                     when the smaple number is very large, Monte Carlo Simulation is equal to the deterministic model')
 parser.add_argument('--psnr_weight', default=1.0, type=float, help='Balance between PSNR and SSIM')
 parser.add_argument('--no_ref', default='', type=str, choices=['clip', 'niqe', 'uiqm_uciqe'], help='no reference image quality evaluator. \
-                    support CLIP-IQA and NIQE')
+                    support CLIP-IQA, NIQE, UIQM and UCIQE')
 parser.add_argument('--uiqm_weight', default=1.0, type=float, help='Balance between UIQM and UICIQE')
 parser.add_argument('--lpips', action='store_true', help='True to compute LPIPS')
 parser.add_argument('--deterministic', action='store_true', help='Use deterministic mode')
+parser.add_argument('--samples_per_split', default=8, type=int, help='Adjust this to 1 if you encounter CUDA OOM issues')
 parser.add_argument('--seed', default=287128, type=int, help='fix random seed to reproduce consistent resutls')
 
 args = parser.parse_args()
@@ -98,7 +99,7 @@ cond_net.cuda()
 cond_net = nn.DataParallel(cond_net)
 cond_net.eval()
 
-factor = 32
+samples_per_split = args.samples_per_split
 dataset = args.dataset
 config = os.path.basename(args.opt).split('.')[0]
 checkpoint_name = os.path.basename(args.weights).split('.')[0]
@@ -113,7 +114,9 @@ if args.no_ref =='clip':
     # clip_metric = CLIPImageQualityAssessment(prompts=("quality","brightness", "natural", 'noisiness', 'colorfullness', 'sharpness', 'contrast', 'beautiful')).cuda()
     # clip_metric = CLIPImageQualityAssessment(prompts=("quality", "natural", 'noisiness')).cuda()
     # clip_metric = CLIPImageQualityAssessment(prompts=('warm',)).cuda()
-    clip_metric = CLIPImageQualityAssessment(prompts=("brightness", "natural", 'noisiness')).cuda()
+    # clip_metric = CLIPImageQualityAssessment(prompts=("brightness", "natural", 'noisiness')).cuda()
+    clip_metric = CLIPImageQualityAssessment(prompts=('quality', "natural", 'noisiness')).cuda()
+    # clip_metric = CLIPImageQualityAssessment(prompts=('noisiness',)).cuda()
 psnr = []
 ssim = []
 lpips_ = []
@@ -138,7 +141,7 @@ if target_dir != '':
 if args.lpips:
     loss_fn = lpips.LPIPS(net='alex', verbose=False)
     loss_fn.cuda()
-def _padimg_np(inp, factor=factor):
+def _padimg_np(inp, factor):
     h, w = inp.shape[0], inp.shape[1]
     hp, wp = ((h + factor) // factor) * factor, ((w + factor) // factor) * factor
     padh = hp - h if h % factor != 0 else 0
@@ -176,7 +179,7 @@ with torch.inference_mode():
             hist_lq = hist_lq.permute(1 ,2, 3, 0)
             hist_lq = hist_lq.reshape(hist_lq.shape[0], hist_lq.shape[1], -1).numpy()
             dh, dw = hist_lq.shape[0], hist_lq.shape[1]
-            hist_lq_pad = _padimg_np(hist_lq)
+            hist_lq_pad = _padimg_np(hist_lq, factor=4)
             hist_lq_pad = torch.from_numpy(hist_lq_pad).permute(2, 0, 1).unsqueeze(0).cuda()
 
         one_pred_list = []
@@ -214,7 +217,7 @@ with torch.inference_mode():
 
         input_expended = input_.tile(args.num_samples, 1, 1, 1)
         cat_input = torch.cat([input_expended, one_pred_conds], dim=1)
-        split_input = cat_input.split(8)
+        split_input = cat_input.split(samples_per_split)
 
         one_preds = []
         for split in split_input:
