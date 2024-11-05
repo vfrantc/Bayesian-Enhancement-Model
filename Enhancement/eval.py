@@ -43,7 +43,7 @@ parser.add_argument('--Monte_Carlo', action='store_true', help='use Monte Carlo 
                     when the smaple number is very large, Monte Carlo Simulation is equal to the deterministic model')
 parser.add_argument('--psnr_weight', default=1.0, type=float, help='Balance between PSNR and SSIM')
 parser.add_argument('--no_ref', default='', type=str, choices=['clip', 'niqe', 'uiqm_uciqe'], help='no reference image quality evaluator. \
-                    support CLIP-IQA and NIQE')
+                    support CLIP-IQA, NIQE, UIQM and UCIQE')
 parser.add_argument('--uiqm_weight', default=1.0, type=float, help='Balance between UIQM and UICIQE')
 parser.add_argument('--lpips', action='store_true', help='True to compute LPIPS')
 parser.add_argument('--deterministic', action='store_true', help='Use deterministic mode')
