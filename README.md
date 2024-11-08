@@ -21,6 +21,11 @@ This is the official code for the paper [Bayesian Enhancement Models for One-to-
 
 ## Demo: BEM's No-Reference Inference with CLIP
 ![clip default](./assets/clip_default.gif) ![clip noise](./assets/clip_noise.gif)
+### Input Image
+<p align="center">
+    <img src="assets/input_demo.png" align="center" width="50%">
+</p>
+
 ## HD Visulisation
 <p align="center"> <img src='assets/vis_hd.png' align="center" > </p>
 
