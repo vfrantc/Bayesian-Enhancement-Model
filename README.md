@@ -2,6 +2,15 @@
 
 This is the official code for the paper [Bayesian Enhancement Models for One-to-Many Mapping in Image Enhancement](https://openreview.net/pdf?id=jJJOoLVAEm)
 
+   
+  
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-lol)](https://paperswithcode.com/sota/low-light-image-enhancement-on-lol?p=bayesian-enhancement-models-for-one-to-many)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-dicm)](https://paperswithcode.com/sota/low-light-image-enhancement-on-dicm?p=bayesian-enhancement-models-for-one-to-many)	
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-lime)](https://paperswithcode.com/sota/low-light-image-enhancement-on-lime?p=bayesian-enhancement-models-for-one-to-many)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-mef)](https://paperswithcode.com/sota/low-light-image-enhancement-on-mef?p=bayesian-enhancement-models-for-one-to-many)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-npe)](https://paperswithcode.com/sota/low-light-image-enhancement-on-npe?p=bayesian-enhancement-models-for-one-to-many)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-vv)](https://paperswithcode.com/sota/low-light-image-enhancement-on-vv?p=bayesian-enhancement-models-for-one-to-many)
+
 ## Demo: BEM's No-Reference Inference with CLIP
 ![clip default](./assets/clip_default.gif) ![clip noise](./assets/clip_noise.gif)
 ### Input Image
@@ -11,14 +20,7 @@ This is the official code for the paper [Bayesian Enhancement Models for One-to-
 
 ### Process
 <p align="center"> <img src='assets/pred_process.png' align="center" > </p> 
-&nbsp;      
-  
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-lol)](https://paperswithcode.com/sota/low-light-image-enhancement-on-lol?p=bayesian-enhancement-models-for-one-to-many)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-dicm)](https://paperswithcode.com/sota/low-light-image-enhancement-on-dicm?p=bayesian-enhancement-models-for-one-to-many)	
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-lime)](https://paperswithcode.com/sota/low-light-image-enhancement-on-lime?p=bayesian-enhancement-models-for-one-to-many)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-mef)](https://paperswithcode.com/sota/low-light-image-enhancement-on-mef?p=bayesian-enhancement-models-for-one-to-many)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-npe)](https://paperswithcode.com/sota/low-light-image-enhancement-on-npe?p=bayesian-enhancement-models-for-one-to-many)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-vv)](https://paperswithcode.com/sota/low-light-image-enhancement-on-vv?p=bayesian-enhancement-models-for-one-to-many)
+&nbsp;   
 
 
 ## News 💡
