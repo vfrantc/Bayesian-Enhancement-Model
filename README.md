@@ -19,7 +19,8 @@ This is the official code for the paper [Bayesian Enhancement Models for One-to-
 - **2024.10.31** The model checkpoints trained on LOLv1 is released.  
 - **2024.10.21** Code has been released. We train each model multiple times and report the median of the test results. Therefore, the results you obtain may be higher than those reported in the paper. If you encounter any difficulties in reproducing our work, please issue them. We look forward to seeing future developments based on the Bayesian Enhancement Model ✨
 
-
+## Demo for using CLIP for No-Reference Inference
+![clip default](./assets/clip_default.gif) ![clip noise](./assets/clip_noise.gif)
 ## HD Visulisation
 <p align="center"> <img src='assets/vis_hd.png' align="center" > </p>
 
@@ -121,7 +122,7 @@ Download the LOLv1 and LOLv2 datasets from [here](https://daooshee.github.io/BMV
 
 Download the LIME, NPE, MEF, DICM, and VV datasets from [here](https://daooshee.github.io/BMVC2018website/).
 
-Download UIEB datasets from [here](https://li-chongyi.github.io/proj_benchmark.html).
+Download UIEB datasets from [here](https://github.com/Anonymous1563/Bayesian-Enhancement-Model/releases/tag/checkpoints_%26_visual_results).
 &nbsp;
 
 

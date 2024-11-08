@@ -40,16 +40,22 @@ parser.add_argument('--dataset', default='yourdataset', type=str, help='Name of 
 parser.add_argument('--GT_mean', action='store_true', help='Use the mean of GT to rectify the output of the model')
 parser.add_argument('--num_samples', default=200, type=int, help='Number of random samples')
 parser.add_argument('--Monte_Carlo', action='store_true', help='use Monte Carlo Simulation, i.e., averaging the outcome of random samples. \
-                    when the smaple number is very large, Monte Carlo Simulation is equal to the deterministic model')
+                    When the smaple number is very large, Monte Carlo Simulation is equal to the deterministic model')
 parser.add_argument('--psnr_weight', default=1.0, type=float, help='Balance between PSNR and SSIM')
 parser.add_argument('--no_ref', default='', type=str, choices=['clip', 'niqe', 'uiqm_uciqe'], help='no reference image quality evaluator. \
-                    support CLIP-IQA, NIQE, UIQM and UCIQE')
+                    Support CLIP-IQA and NIQE')
 parser.add_argument('--uiqm_weight', default=1.0, type=float, help='Balance between UIQM and UICIQE')
 parser.add_argument('--lpips', action='store_true', help='True to compute LPIPS')
 parser.add_argument('--deterministic', action='store_true', help='Use deterministic mode')
 parser.add_argument('--parallel_num', default=1, type=int, help='Acceleartion by increasing the parallen processing samples. \
-                     Adjust this to 1 if you encounter CUDA OOM issues')
+                    Adjust this to 1 if you encounter CUDA OOM issues')
 parser.add_argument('--seed', default=287128, type=int, help='fix random seed to reproduce consistent resutls')
+parser.add_argument('--clip_prompts',nargs='+',
+    default=['brightness', 'noisiness', 'quality'],
+    help="A list of CLIP prompts to use with CLIP-IQA when 'no_ref' is set to 'clip'. \
+        Recommended prompts include 'brightness', 'noisiness', and 'quality'. You can specify any one or more prompts separated by spaces. \
+        If not specified, the default is ['brightness', 'noisiness', 'quality']."
+)
 
 args = parser.parse_args()
 
@@ -110,13 +116,8 @@ os.makedirs(result_dir, exist_ok=True)
 
 
 if args.no_ref =='clip':
-    # clip_metric = CLIPImageQualityAssessment(prompts=("noisiness",)).cuda()
-    # clip_metric = CLIPImageQualityAssessment(prompts=("quality","brightness", "natural", 'noisiness', 'colorfullness', 'sharpness', 'contrast', 'beautiful')).cuda()
-    # clip_metric = CLIPImageQualityAssessment(prompts=("quality", "natural", 'noisiness')).cuda()
-    # clip_metric = CLIPImageQualityAssessment(prompts=('warm',)).cuda()
-    # clip_metric = CLIPImageQualityAssessment(prompts=("brightness", "natural", 'noisiness')).cuda()
-    clip_metric = CLIPImageQualityAssessment(prompts=('quality', "natural", 'noisiness')).cuda()
-    # clip_metric = CLIPImageQualityAssessment(prompts=('noisiness',)).cuda()
+    clip_metric = CLIPImageQualityAssessment(prompts=tuple(args.clip_prompts)).cuda()
+
 psnr = []
 ssim = []
 lpips_ = []
@@ -134,9 +135,9 @@ else:
     target_dir = opt['datasets']['val']['dataroot_gt']
 if args.GT_mean and target_dir =='':
     raise ValueError('GT_mean is only available when GT is provided')
-input_paths = natsorted( glob(os.path.join(input_dir, '*.png')) + glob(os.path.join(input_dir, '*.jpg')) + glob(os.path.join(input_dir, '*.bmp')) )
+input_paths = natsorted( glob(os.path.join(input_dir, '*.png')) + glob(os.path.join(input_dir, '*.jpg')) + glob(os.path.join(input_dir, '*.bmp')) + glob(os.path.join(input_dir, '*.tif')) )
 if target_dir != '':
-    target_paths = natsorted( glob(os.path.join(target_dir, '*.png')) + glob(os.path.join(target_dir, '*.jpg')) + glob(os.path.join(target_dir, '*.bmp')) )
+    target_paths = natsorted( glob(os.path.join(target_dir, '*.png')) + glob(os.path.join(target_dir, '*.jpg')) + glob(os.path.join(target_dir, '*.bmp')) + glob(os.path.join(target_dir, '*.tif')))
 
 if args.lpips:
     loss_fn = lpips.LPIPS(net='alex', verbose=False)
@@ -211,7 +212,7 @@ with torch.inference_mode():
 
             pred_cond = F.interpolate(pred_cond, scale_factor=scale_factor, mode='bilinear', align_corners=False)
             one_pred_cond_list.append(pred_cond)
-
+        torch.cuda.empty_cache()
         one_pred_conds = torch.cat(one_pred_cond_list, dim=0)
         one_pred_conds = one_pred_conds[:, :, :hp, :wp]
 
@@ -254,7 +255,7 @@ with torch.inference_mode():
             else:
                 one_psnr_list.append(utils.calculate_psnr(target, pred))
                 one_ssim_list.append(utils.calculate_ssim(img_as_ubyte(target), img_as_ubyte(pred)))
-
+        torch.cuda.empty_cache()
         #------------------------------------------------------------------------------------------
 
         if args.no_ref in ['clip', 'niqe', 'uiqm_uciqe']:
@@ -298,6 +299,16 @@ with torch.inference_mode():
             if target_dir != '':
                 mc_psnr.append(utils.calculate_psnr(target, mc_pred))
                 mc_ssim.append(utils.calculate_ssim(img_as_ubyte(target), img_as_ubyte(mc_pred)))
+
+        # one_rank_list = one_clip_list
+        # # one_rank_list = one_niqe_list
+        # sorted_one_rank_list = sorted(one_rank_list, reverse=True)
+        # best_score = sorted_one_rank_list[-1]
+        # # sorted_one_rank_list = sorted_one_rank_list[0::args.num_samples//4]
+        # for _i in range(len(sorted_one_rank_list)):
+        #     _idx2 = one_rank_list.index(sorted_one_rank_list[_i])
+        #     utils.save_img((os.path.join(result_dir, '{:.2f}.png'.format(sorted_one_rank_list[_i]))), img_as_ubyte(one_pred_list[_idx2]))
+        # # utils.save_img((os.path.join(result_dir, os.path.splitext(os.path.split(inp_path)[-1])[0] + '_sample_score_{:.4f}.png'.format(best_score))), img_as_ubyte(best_one_pred))
 
         utils.save_img((os.path.join(result_dir, os.path.splitext(os.path.split(inp_path)[-1])[0] + '.png')), img_as_ubyte(best_one_pred))
 
