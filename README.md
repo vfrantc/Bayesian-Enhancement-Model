@@ -19,7 +19,7 @@ This is the official code for the paper [Bayesian Enhancement Models for One-to-
 - **2024.10.31** The model checkpoints trained on LOLv1 is released.  
 - **2024.10.21** Code has been released. We train each model multiple times and report the median of the test results. Therefore, the results you obtain may be higher than those reported in the paper. If you encounter any difficulties in reproducing our work, please issue them. We look forward to seeing future developments based on the Bayesian Enhancement Model ✨
 
-## Demo: for CLIP-Based No-Reference Inference
+## Demo: BEM's No-Reference Inference with CLIP
 ![clip default](./assets/clip_default.gif) ![clip noise](./assets/clip_noise.gif)
 ## HD Visulisation
 <p align="center"> <img src='assets/vis_hd.png' align="center" > </p>
