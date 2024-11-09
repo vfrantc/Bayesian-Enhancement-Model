@@ -12,10 +12,11 @@ This is the official code for the paper [Bayesian Enhancement Models for One-to-
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/bayesian-enhancement-models-for-one-to-many/low-light-image-enhancement-on-vv)](https://paperswithcode.com/sota/low-light-image-enhancement-on-vv?p=bayesian-enhancement-models-for-one-to-many)
 
 ## Demo: BEM's No-Reference Inference with CLIP
-![clip default](./assets/clip_default.gif) ![clip noise](./assets/clip_noise.gif)
+![clip default](./assets/clip_default.gif) 
+<!-- ![clip noise](./assets/clip_noise.gif) -->
 ### Input Image
 <p align="center">
-    <img src="assets/input_demo.png" align="center" width="50%">
+    <img src="assets/input_demo.png" align="center" width="100%">
 </p>
 
 ### Process
