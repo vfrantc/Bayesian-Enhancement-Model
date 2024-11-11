@@ -269,6 +269,7 @@ with torch.inference_mode():
         #------------------------------------------------------------------------------------------
 
         if args.no_ref in ['clip', 'niqe', 'uiqm_uciqe']:
+            # No-Reference Inference--------------------------
             if args.no_ref == 'clip':
                 _idx = one_clip_list.index(max(one_clip_list))
             elif args.no_ref == 'niqe':
@@ -284,14 +285,21 @@ with torch.inference_mode():
             if target_dir != '':
                 psnr.append(utils.calculate_psnr(target, best_one_pred))
                 ssim.append(utils.calculate_ssim(img_as_ubyte(target), img_as_ubyte(best_one_pred)))
-        elif target_dir != '':
-            best_one_list = (args.psnr_weight * np.array(one_psnr_list) / max(one_psnr_list)  + (1 - args.psnr_weight) * np.array(one_ssim_list) / max(one_ssim_list)).tolist()
-            _idx = best_one_list.index(max(best_one_list))
-            best_one_pred = one_pred_list[_idx]
-            best_one_psnr = one_psnr_list[_idx]
-            best_one_ssim = one_ssim_list[_idx]
-            psnr.append(best_one_psnr)
-            ssim.append(best_one_ssim)
+        else:
+            # Full-Reference Inference-----------------------
+            if target_dir != '':
+                best_one_list = (args.psnr_weight * np.array(one_psnr_list) / max(one_psnr_list)  + (1 - args.psnr_weight) * np.array(one_ssim_list) / max(one_ssim_list)).tolist()
+                _idx = best_one_list.index(max(best_one_list))
+                best_one_pred = one_pred_list[_idx]
+                best_one_psnr = one_psnr_list[_idx]
+                best_one_ssim = one_ssim_list[_idx]
+                psnr.append(best_one_psnr)
+                ssim.append(best_one_ssim)
+            else:
+                # Deterministic Mode with no reference-------
+                best_one_pred = one_pred_list[0]
+
+
 
         if target_dir != '':
             if args.lpips:
@@ -308,16 +316,16 @@ with torch.inference_mode():
                 mc_psnr.append(utils.calculate_psnr(target, mc_pred))
                 mc_ssim.append(utils.calculate_ssim(img_as_ubyte(target), img_as_ubyte(mc_pred)))
 
-            # one_rank_list = one_clip_list
-            # # one_rank_list = one_niqe_list
-            # sorted_one_rank_list = sorted(one_rank_list, reverse=True)
-            # best_score = sorted_one_rank_list[-1]
-            # # sorted_one_rank_list = sorted_one_rank_list[0::args.num_samples//4]
-            # for _i in range(len(sorted_one_rank_list)):
-            #     _idx2 = one_rank_list.index(sorted_one_rank_list[_i])
-            #     utils.save_img((os.path.join(result_dir, '{:.2f}.png'.format(sorted_one_rank_list[_i]))), img_as_ubyte(one_pred_list[_idx2]))
+        # one_rank_list = one_clip_list
+        # # one_rank_list = one_niqe_list
+        # sorted_one_rank_list = sorted(one_rank_list, reverse=True)
+        # best_score = sorted_one_rank_list[-1]
+        # # sorted_one_rank_list = sorted_one_rank_list[0::args.num_samples//4]
+        # for _i in range(len(sorted_one_rank_list)):
+        #     _idx2 = one_rank_list.index(sorted_one_rank_list[_i])
+        #     utils.save_img((os.path.join(result_dir, '{:.2f}.png'.format(sorted_one_rank_list[_i]))), img_as_ubyte(one_pred_list[_idx2]))
 
-            utils.save_img((os.path.join(result_dir, os.path.splitext(os.path.split(inp_path)[-1])[0] + '.png')), img_as_ubyte(best_one_pred))
+        utils.save_img((os.path.join(result_dir, os.path.splitext(os.path.split(inp_path)[-1])[0] + '.png')), img_as_ubyte(best_one_pred))
 
 end_time = time.perf_counter()
 execution_time = end_time - start_time
