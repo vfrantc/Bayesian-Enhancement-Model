@@ -239,7 +239,7 @@ with torch.inference_mode():
                     if 'noisiness' in vs:
                         vs['noisiness'] = vs['noisiness'] * 7
                     if 'noisiness' in vs:
-                        vs['brightness'] = vs['brightness'] * 1.5
+                        vs['brightness'] = vs['brightness'] * 1.2
                     vs = {key: value[None] if len(value.shape) == 0 else value for key, value in vs.items()}
                     vs_matrix = torch.stack(list(vs.values()))
                     vs = vs_matrix.mean(dim=0)
@@ -262,8 +262,9 @@ with torch.inference_mode():
                 one_uiqm_list.append(getUIQM(img_RGB))
                 one_uciqe_list.append(getUCIQE(img_as_ubyte(pred)))
             else:
-                one_psnr_list.append(utils.calculate_psnr(target, pred))
-                one_ssim_list.append(utils.calculate_ssim(img_as_ubyte(target), img_as_ubyte(pred)))
+                if target_dir != '':
+                    one_psnr_list.append(utils.calculate_psnr(target, pred))
+                    one_ssim_list.append(utils.calculate_ssim(img_as_ubyte(target), img_as_ubyte(pred)))
         torch.cuda.empty_cache()
         #------------------------------------------------------------------------------------------
 
@@ -283,7 +284,7 @@ with torch.inference_mode():
             if target_dir != '':
                 psnr.append(utils.calculate_psnr(target, best_one_pred))
                 ssim.append(utils.calculate_ssim(img_as_ubyte(target), img_as_ubyte(best_one_pred)))
-        else:
+        elif target_dir != '':
             best_one_list = (args.psnr_weight * np.array(one_psnr_list) / max(one_psnr_list)  + (1 - args.psnr_weight) * np.array(one_ssim_list) / max(one_ssim_list)).tolist()
             _idx = best_one_list.index(max(best_one_list))
             best_one_pred = one_pred_list[_idx]
@@ -299,25 +300,24 @@ with torch.inference_mode():
                 score_lpips = loss_fn.forward(ex_ref, ex_p0).item()
                 lpips_.append(score_lpips)
 
-        if args.Monte_Carlo:
-            if args.GT_mean:
-                mean_mc_pred = cv2.cvtColor(mc_pred.astype(np.float32), cv2.COLOR_BGR2GRAY).mean()
-                mean_target = cv2.cvtColor(target.astype(np.float32), cv2.COLOR_BGR2GRAY).mean()
-                mc_pred = np.clip(mc_pred * (mean_target / mean_mc_pred), 0, 1)
-            if target_dir != '':
+            if args.Monte_Carlo:
+                if args.GT_mean:
+                    mean_mc_pred = cv2.cvtColor(mc_pred.astype(np.float32), cv2.COLOR_BGR2GRAY).mean()
+                    mean_target = cv2.cvtColor(target.astype(np.float32), cv2.COLOR_BGR2GRAY).mean()
+                    mc_pred = np.clip(mc_pred * (mean_target / mean_mc_pred), 0, 1)
                 mc_psnr.append(utils.calculate_psnr(target, mc_pred))
                 mc_ssim.append(utils.calculate_ssim(img_as_ubyte(target), img_as_ubyte(mc_pred)))
 
-        # one_rank_list = one_clip_list
-        # # one_rank_list = one_niqe_list
-        # sorted_one_rank_list = sorted(one_rank_list, reverse=True)
-        # best_score = sorted_one_rank_list[-1]
-        # # sorted_one_rank_list = sorted_one_rank_list[0::args.num_samples//4]
-        # for _i in range(len(sorted_one_rank_list)):
-        #     _idx2 = one_rank_list.index(sorted_one_rank_list[_i])
-        #     utils.save_img((os.path.join(result_dir, '{:.2f}.png'.format(sorted_one_rank_list[_i]))), img_as_ubyte(one_pred_list[_idx2]))
+            # one_rank_list = one_clip_list
+            # # one_rank_list = one_niqe_list
+            # sorted_one_rank_list = sorted(one_rank_list, reverse=True)
+            # best_score = sorted_one_rank_list[-1]
+            # # sorted_one_rank_list = sorted_one_rank_list[0::args.num_samples//4]
+            # for _i in range(len(sorted_one_rank_list)):
+            #     _idx2 = one_rank_list.index(sorted_one_rank_list[_i])
+            #     utils.save_img((os.path.join(result_dir, '{:.2f}.png'.format(sorted_one_rank_list[_i]))), img_as_ubyte(one_pred_list[_idx2]))
 
-        utils.save_img((os.path.join(result_dir, os.path.splitext(os.path.split(inp_path)[-1])[0] + '.png')), img_as_ubyte(best_one_pred))
+            utils.save_img((os.path.join(result_dir, os.path.splitext(os.path.split(inp_path)[-1])[0] + '.png')), img_as_ubyte(best_one_pred))
 
 end_time = time.perf_counter()
 execution_time = end_time - start_time
