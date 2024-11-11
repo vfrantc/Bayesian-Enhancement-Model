@@ -47,7 +47,7 @@ parser.add_argument('--no_ref', default='', type=str, choices=['clip', 'niqe', '
 parser.add_argument('--uiqm_weight', default=1.0, type=float, help='Balance between UIQM and UICIQE')
 parser.add_argument('--lpips', action='store_true', help='True to compute LPIPS')
 parser.add_argument('--deterministic', action='store_true', help='Use deterministic mode')
-parser.add_argument('--parallel_num', default=1, type=int, help='Acceleartion by increasing the parallen processing samples. \
+parser.add_argument('--parallel_num', default=1, type=int, help='Acceleartion by increasing the parallel processing samples. \
                     Adjust this to 1 if you encounter CUDA OOM issues')
 parser.add_argument('--seed', default=287128, type=int, help='fix random seed to reproduce consistent resutls')
 parser.add_argument('--clip_prompts',nargs='+',
@@ -91,6 +91,9 @@ scale_factor = opt['condition'].get('scale_down', 0) + opt['condition'].get('his
 
 if args.deterministic:
     args.num_samples = 1
+if args.num_samples == 1:
+    args.parallel_num = 1
+args.num_samples = args.num_samples - (args.num_samples % args.parallel_num)
 
 net.load_state_dict(checkpoint['params'])
 print("Loaded weights from", weights)
@@ -124,8 +127,6 @@ lpips_ = []
 niqe = []
 uiqm = []
 uciqe = []
-if dataset in ['SID', 'SMID', 'SDSD_indoor', 'SDSD_outdoor']:
-    raise ValueError('Not implemented yet')
 
 if args.input_dir != '':
     input_dir = args.input_dir
@@ -198,6 +199,7 @@ with torch.inference_mode():
             input_cond = img_down_pad
         elif opt['condition']['type'] == 'histogram':
             input_cond = hist_lq_pad
+
         for i in range(args.num_samples):
             pred_cond = net(input_cond)[-1]
             pred_cond = torch.clamp(pred_cond, 0, 1)
@@ -210,40 +212,47 @@ with torch.inference_mode():
             noise_level = cond_opt['condition'].get('noise_level', 0)
             pred_cond = pred_cond + torch.randn_like(pred_cond) * noise_level
 
-            pred_cond = F.interpolate(pred_cond, scale_factor=scale_factor, mode='bilinear', align_corners=False)
-            one_pred_cond_list.append(pred_cond)
+            one_pred_cond_list.append(pred_cond.cpu())
+
         torch.cuda.empty_cache()
         one_pred_conds = torch.cat(one_pred_cond_list, dim=0)
-        one_pred_conds = one_pred_conds[:, :, :hp, :wp]
-
-        input_expended = input_.tile(args.num_samples, 1, 1, 1)
-        cat_input = torch.cat([input_expended, one_pred_conds], dim=1)
-        split_input = cat_input.split(args.parallel_num)
 
         one_preds = []
-        for split in split_input:
-            one_preds.append(cond_net(split)[-1])
-        one_preds = torch.cat(one_preds, dim=0)
-        one_preds = one_preds[:, :, :h, :w]
+        input_expended = input_.expand(args.parallel_num, *input_.shape[1:])
+        for i in range(args.num_samples // args.parallel_num):
+            sub_one_pred_conds = one_pred_conds[i*args.parallel_num: (i+1)*args.parallel_num].cuda()
+            sub_one_pred_conds = F.interpolate(sub_one_pred_conds, scale_factor=scale_factor, mode='bilinear', align_corners=False)[:, :, :hp, :wp]
+            one_preds.append(cond_net(torch.cat([input_expended, sub_one_pred_conds], dim=1))[-1].cpu())
+        one_preds_tensor = torch.cat(one_preds, dim=0)[:, :, :h, :w]
+        one_preds = one_preds_tensor.detach().permute(0, 2, 3, 1)
+        if args.Monte_Carlo:
+            mc_pred = torch.clamp(torch.mean(one_preds, dim=0), 0, 1).numpy()
+        one_preds_tensor = torch.clamp(one_preds_tensor, 0, 1)
+        one_preds_numpy = torch.clamp(one_preds, 0, 1).numpy()
 
+        if args.no_ref == 'clip':
+            for i in range(args.num_samples // args.parallel_num):
+                vs = clip_metric(one_preds_tensor[i*args.parallel_num:(i+1)*args.parallel_num].cuda())
+                if isinstance(vs, torch.Tensor):
+                    one_clip_list.append(vs.cpu().numpy())
+                else:
+                    if 'noisiness' in vs:
+                        vs['noisiness'] = vs['noisiness'] * 7
+                    if 'noisiness' in vs:
+                        vs['brightness'] = vs['brightness'] * 1.5
+                    vs = {key: value[None] if len(value.shape) == 0 else value for key, value in vs.items()}
+                    vs_matrix = torch.stack(list(vs.values()))
+                    vs = vs_matrix.mean(dim=0)
+                    one_clip_list.extend(vs.cpu().numpy())
         for i in range(args.num_samples):
-            pred = one_preds[i:i+1]
-            if args.Monte_Carlo:
-                mc_pred_list.append(pred.cpu().detach().permute(0, 2, 3, 1).squeeze(0))
-
-            pred_clip = pred
-            pred = torch.clamp(pred, 0, 1).cpu().detach().permute(0, 2, 3, 1).squeeze(0).numpy()
-
+            pred = one_preds_numpy[i]
             if args.GT_mean:
                 mean_pred = pred.mean(axis=(0,1), keepdims=True)
                 mean_target = target.mean(axis=(0,1), keepdims=True)
                 pred = np.clip(pred * (mean_target / mean_pred), 0, 1)
-
             one_pred_list.append(pred)
             if args.no_ref == 'clip':
-                vs = clip_metric(pred_clip)
-                vs = [vs] if isinstance(vs, torch.Tensor) else vs.values()
-                one_clip_list.append(np.mean([v.item() for v in vs]))
+                pass # running CLIP in parallel, so skip the loop here
             elif args.no_ref == 'niqe':
                 one_niqe_list.append(calculate_niqe(pred*255, crop_border=0))
             elif args.no_ref == 'uiqm_uciqe':
@@ -291,7 +300,6 @@ with torch.inference_mode():
                 lpips_.append(score_lpips)
 
         if args.Monte_Carlo:
-            mc_pred = torch.clamp(torch.mean(torch.stack(mc_pred_list), dim=0), 0, 1).numpy()
             if args.GT_mean:
                 mean_mc_pred = cv2.cvtColor(mc_pred.astype(np.float32), cv2.COLOR_BGR2GRAY).mean()
                 mean_target = cv2.cvtColor(target.astype(np.float32), cv2.COLOR_BGR2GRAY).mean()
@@ -308,7 +316,6 @@ with torch.inference_mode():
         # for _i in range(len(sorted_one_rank_list)):
         #     _idx2 = one_rank_list.index(sorted_one_rank_list[_i])
         #     utils.save_img((os.path.join(result_dir, '{:.2f}.png'.format(sorted_one_rank_list[_i]))), img_as_ubyte(one_pred_list[_idx2]))
-        # # utils.save_img((os.path.join(result_dir, os.path.splitext(os.path.split(inp_path)[-1])[0] + '_sample_score_{:.4f}.png'.format(best_score))), img_as_ubyte(best_one_pred))
 
         utils.save_img((os.path.join(result_dir, os.path.splitext(os.path.split(inp_path)[-1])[0] + '.png')), img_as_ubyte(best_one_pred))
 
