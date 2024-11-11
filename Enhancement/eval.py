@@ -238,8 +238,9 @@ with torch.inference_mode():
                 else:
                     if 'noisiness' in vs:
                         vs['noisiness'] = vs['noisiness'] * 7
-                    if 'noisiness' in vs:
-                        vs['brightness'] = vs['brightness'] * 1.2
+                    if 'brightness' in vs:
+                        # scaling down this to avoid outputting an over-exposed result
+                        vs['brightness'] = vs['brightness'] * 0.9
                     vs = {key: value[None] if len(value.shape) == 0 else value for key, value in vs.items()}
                     vs_matrix = torch.stack(list(vs.values()))
                     vs = vs_matrix.mean(dim=0)
