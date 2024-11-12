@@ -172,16 +172,12 @@ with torch.inference_mode():
         input_ = torch.from_numpy(img_pad).permute(2, 0, 1).unsqueeze(0).cuda()
 
         if opt['condition']['type'] == 'mean':
-            img_down = cv2.resize(img, None, fx=1/scale_factor, fy=1/scale_factor, interpolation=cv2.INTER_LINEAR)
-            dh, dw = img_down.shape[0], img_down.shape[1]
-            img_down_pad = _padimg_np(img_down, factor=4) # Paddings
+            img_down_pad = cv2.resize(img_pad, None, fx=1/scale_factor, fy=1/scale_factor, interpolation=cv2.INTER_LINEAR)
             img_down_pad = torch.from_numpy(img_down_pad).permute(2, 0, 1).unsqueeze(0).cuda()
         elif opt['condition']['type'] == 'histogram':
-            hist_lq = compute_histograms(img, opt['condition']['hist_patch_size'], opt['condition']['num_bins'])
-            hist_lq = hist_lq.permute(1 ,2, 3, 0)
-            hist_lq = hist_lq.reshape(hist_lq.shape[0], hist_lq.shape[1], -1).numpy()
-            dh, dw = hist_lq.shape[0], hist_lq.shape[1]
-            hist_lq_pad = _padimg_np(hist_lq, factor=4)
+            hist_lq_pad = compute_histograms(img_pad, opt['condition']['hist_patch_size'], opt['condition']['num_bins'])
+            hist_lq_pad = hist_lq_pad.permute(1 ,2, 3, 0)
+            hist_lq_pad = hist_lq_pad.reshape(hist_lq_pad.shape[0], hist_lq_pad.shape[1], -1).numpy()
             hist_lq_pad = torch.from_numpy(hist_lq_pad).permute(2, 0, 1).unsqueeze(0).cuda()
 
         one_pred_list = []
@@ -221,7 +217,7 @@ with torch.inference_mode():
         input_expended = input_.expand(args.parallel_num, *input_.shape[1:])
         for i in range(args.num_samples // args.parallel_num):
             sub_one_pred_conds = one_pred_conds[i*args.parallel_num: (i+1)*args.parallel_num].cuda()
-            sub_one_pred_conds = F.interpolate(sub_one_pred_conds, scale_factor=scale_factor, mode='bilinear', align_corners=False)[:, :, :hp, :wp]
+            sub_one_pred_conds = F.interpolate(sub_one_pred_conds, scale_factor=scale_factor, mode='bilinear', align_corners=False)
             one_preds.append(cond_net(torch.cat([input_expended, sub_one_pred_conds], dim=1))[-1].cpu())
         one_preds_tensor = torch.cat(one_preds, dim=0)[:, :, :h, :w]
         one_preds = one_preds_tensor.detach().permute(0, 2, 3, 1)
@@ -237,10 +233,10 @@ with torch.inference_mode():
                     one_clip_list.append(vs.cpu().numpy())
                 else:
                     if 'noisiness' in vs:
-                        vs['noisiness'] = vs['noisiness'] * 7
+                        vs['noisiness'] = vs['noisiness'] * 1
                     if 'brightness' in vs:
                         # scaling down this to avoid outputting an over-exposed result
-                        vs['brightness'] = vs['brightness'] * 0.9
+                        vs['brightness'] = vs['brightness'] * 0.7
                     vs = {key: value[None] if len(value.shape) == 0 else value for key, value in vs.items()}
                     vs_matrix = torch.stack(list(vs.values()))
                     vs = vs_matrix.mean(dim=0)
@@ -317,16 +313,16 @@ with torch.inference_mode():
                 mc_psnr.append(utils.calculate_psnr(target, mc_pred))
                 mc_ssim.append(utils.calculate_ssim(img_as_ubyte(target), img_as_ubyte(mc_pred)))
 
-        # one_rank_list = one_clip_list
-        # # one_rank_list = one_niqe_list
-        # sorted_one_rank_list = sorted(one_rank_list, reverse=True)
-        # best_score = sorted_one_rank_list[-1]
-        # # sorted_one_rank_list = sorted_one_rank_list[0::args.num_samples//4]
-        # for _i in range(len(sorted_one_rank_list)):
-        #     _idx2 = one_rank_list.index(sorted_one_rank_list[_i])
-        #     utils.save_img((os.path.join(result_dir, '{:.2f}.png'.format(sorted_one_rank_list[_i]))), img_as_ubyte(one_pred_list[_idx2]))
+        one_rank_list = one_clip_list
+        # one_rank_list = one_niqe_list
+        sorted_one_rank_list = sorted(one_rank_list, reverse=True)
+        best_score = sorted_one_rank_list[-1]
+        # sorted_one_rank_list = sorted_one_rank_list[0::args.num_samples//4]
+        for _i in range(len(sorted_one_rank_list)):
+            _idx2 = one_rank_list.index(sorted_one_rank_list[_i])
+            utils.save_img((os.path.join(result_dir, '{:.2f}.png'.format(sorted_one_rank_list[_i]))), img_as_ubyte(one_pred_list[_idx2]))
 
-        utils.save_img((os.path.join(result_dir, os.path.splitext(os.path.split(inp_path)[-1])[0] + '.png')), img_as_ubyte(best_one_pred))
+        # utils.save_img((os.path.join(result_dir, os.path.splitext(os.path.split(inp_path)[-1])[0] + '.png')), img_as_ubyte(best_one_pred))
 
 end_time = time.perf_counter()
 execution_time = end_time - start_time
