@@ -18,6 +18,57 @@
 # )
 # fused_out = fusion(torch.cat([out_1, out_2], dim=1))
 
+# Your modified __init__ might have something like this:
+
+# python
+# Copy code
+# def __init__(...):
+#     super(VMUNetTwoBranch, self).__init__()
+#     # ... existing code ...
+    
+#     # Cross-fusion layers for each encoder stage
+#     self.cross_fusion_layers_12 = nn.ModuleList([CrossFusionBlock(n_feat*(2**i)) for i in range(self.num_levels - 1)])
+#     self.cross_fusion_layers_21 = nn.ModuleList([CrossFusionBlock(n_feat*(2**i)) for i in range(self.num_levels - 1)])
+    
+#     # SE block for bottleneck
+#     bottleneck_dim = n_feat * (2 ** (self.num_levels - 1))
+#     self.bottleneck_se = SEBlock(bottleneck_dim)
+#     self.bottleneck_se2 = SEBlock(bottleneck_dim)
+
+#     # Spatial attention after bottleneck
+#     self.spatial_attention = SpatialAttention()
+#     self.spatial_attention2 = SpatialAttention()
+
+#     # ... rest of existing code ...
+# And in the forward method, after each encoder stage, fuse the features:
+
+# python
+# Copy code
+# for i in range(self.num_levels - 1):
+#     curr_feat = self.encoders[i](curr_feat)
+#     curr_feat2 = self.encoders2[i](curr_feat2)
+    
+#     # Cross-level fusion
+#     curr_feat2 = self.cross_fusion_layers_12[i](curr_feat, curr_feat2)
+#     curr_feat = self.cross_fusion_layers_21[i](curr_feat2, curr_feat)
+    
+#     skip_connections.append(curr_feat)
+#     skip_connections2.append(curr_feat2)
+    
+#     curr_feat = self.down_layers[i](curr_feat)
+#     curr_feat2 = self.down_layers2[i](curr_feat2)
+
+# # Bottleneck with attention
+# curr_feat = self.bottleneck(curr_feat)
+# curr_feat = self.bottleneck_se(curr_feat)
+# curr_feat = self.spatial_attention(curr_feat)
+
+# curr_feat2 = self.bottleneck2(curr_feat2)
+# curr_feat2 = self.bottleneck_se2(curr_feat2)
+# curr_feat2 = self.spatial_attention2(curr_feat2)
+# Then continue with the decoder as before. The fused features and added attentions may improve representational power and could help you close the gap towards the state-of-the-art results.
+
+
 # Naive 40 channels, ssm: 1, ratio: 4 No attention, no cross-level fusion    # psnr: 28.7629	 # ssim: 0.8816
 
 

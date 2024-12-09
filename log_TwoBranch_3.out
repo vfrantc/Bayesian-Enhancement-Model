@@ -693,3 +693,15 @@ TunedModel(
 2024-12-09 19:27:15,601 INFO: Saving models and training states.
 2024-12-09 19:27:20,210 INFO: Validation ValSet,		 # psnr: 25.9722	 # ssim: 0.8164
 2024-12-09 19:27:55,980 INFO: [TwoBr..][epoch: 34, iter:   2,100, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 6:07:06, time (data): 0.357 (0.008)] l_pix: 4.0478e-02 l_percep: 1.3899e+00 
+2024-12-09 19:28:32,183 INFO: [TwoBr..][epoch: 36, iter:   2,200, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 6:06:03, time (data): 0.360 (0.009)] l_pix: 2.7084e-02 l_percep: 1.1460e+00 
+2024-12-09 19:29:08,108 INFO: [TwoBr..][epoch: 38, iter:   2,300, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 6:04:27, time (data): 0.360 (0.012)] l_pix: 4.2473e-02 l_percep: 1.4359e+00 
+2024-12-09 19:29:43,698 INFO: [TwoBr..][epoch: 39, iter:   2,400, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 6:02:14, time (data): 0.358 (0.009)] l_pix: 2.8503e-02 l_percep: 1.1672e+00 
+2024-12-09 19:30:19,723 INFO: [TwoBr..][epoch: 41, iter:   2,500, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 6:01:01, time (data): 0.357 (0.008)] l_pix: 3.2370e-02 l_percep: 1.1566e+00 
+2024-12-09 19:30:55,679 INFO: [TwoBr..][epoch: 43, iter:   2,600, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 5:59:42, time (data): 0.358 (0.009)] l_pix: 4.2457e-02 l_percep: 1.5066e+00 
+2024-12-09 19:31:31,251 INFO: [TwoBr..][epoch: 44, iter:   2,700, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 5:57:45, time (data): 0.356 (0.008)] l_pix: 2.8590e-02 l_percep: 1.1221e+00 
+2024-12-09 19:32:07,298 INFO: [TwoBr..][epoch: 46, iter:   2,800, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 5:56:44, time (data): 0.359 (0.010)] l_pix: 3.6077e-02 l_percep: 1.3088e+00 
+2024-12-09 19:32:43,523 INFO: [TwoBr..][epoch: 48, iter:   2,900, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 5:56:03, time (data): 0.364 (0.012)] l_pix: 3.2555e-02 l_percep: 1.6582e+00 
+2024-12-09 19:33:19,118 INFO: [TwoBr..][epoch: 49, iter:   3,000, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 5:54:19, time (data): 0.360 (0.009)] l_pix: 4.8161e-02 l_percep: 1.5958e+00 
+2024-12-09 19:33:19,119 INFO: Saving models and training states.
+2024-12-09 19:33:23,688 INFO: Validation ValSet,		 # psnr: 26.2193	 # ssim: 0.8276
+2024-12-09 19:34:00,000 INFO: [TwoBr..][epoch: 51, iter:   3,100, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 6:01:07, time (data): 0.358 (0.008)] l_pix: 3.6175e-02 l_percep: 1.4712e+00 

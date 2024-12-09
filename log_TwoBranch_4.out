@@ -885,3 +885,13 @@ TunedModel(
 2024-12-09 19:25:40,423 INFO: [TwoBr..][epoch: 21, iter:   1,300, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 15:30:10, time (data): 0.472 (0.007)] l_pix: 3.8292e-02 l_percep: 1.3278e+00 
 2024-12-09 19:26:27,821 INFO: [TwoBr..][epoch: 23, iter:   1,400, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 15:28:37, time (data): 0.473 (0.009)] l_pix: 3.5615e-02 l_percep: 1.5618e+00 
 2024-12-09 19:27:14,921 INFO: [TwoBr..][epoch: 24, iter:   1,500, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 15:26:11, time (data): 0.471 (0.009)] l_pix: 3.3253e-02 l_percep: 1.3920e+00 
+2024-12-09 19:28:02,419 INFO: [TwoBr..][epoch: 26, iter:   1,600, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 15:25:12, time (data): 0.473 (0.010)] l_pix: 3.5364e-02 l_percep: 1.3333e+00 
+2024-12-09 19:28:49,702 INFO: [TwoBr..][epoch: 28, iter:   1,700, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 15:23:36, time (data): 0.474 (0.011)] l_pix: 3.1631e-02 l_percep: 1.5518e+00 
+2024-12-09 19:29:36,701 INFO: [TwoBr..][epoch: 29, iter:   1,800, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 15:21:19, time (data): 0.472 (0.010)] l_pix: 3.7071e-02 l_percep: 1.2394e+00 
+2024-12-09 19:30:23,920 INFO: [TwoBr..][epoch: 31, iter:   1,900, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 15:19:45, time (data): 0.469 (0.008)] l_pix: 3.4980e-02 l_percep: 1.1367e+00 
+2024-12-09 19:31:11,396 INFO: [TwoBr..][epoch: 33, iter:   2,000, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 15:18:55, time (data): 0.472 (0.009)] l_pix: 3.1632e-02 l_percep: 1.3155e+00 
+2024-12-09 19:31:11,397 INFO: Saving models and training states.
+2024-12-09 19:31:16,413 INFO: Validation ValSet,		 # psnr: 26.1027	 # ssim: 0.8199
+2024-12-09 19:32:03,447 INFO: [TwoBr..][epoch: 34, iter:   2,100, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 15:28:53, time (data): 0.469 (0.008)] l_pix: 3.5105e-02 l_percep: 1.3811e+00 
+2024-12-09 19:32:51,107 INFO: [TwoBr..][epoch: 36, iter:   2,200, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 15:27:58, time (data): 0.473 (0.009)] l_pix: 2.8858e-02 l_percep: 1.1135e+00 
+2024-12-09 19:33:38,537 INFO: [TwoBr..][epoch: 38, iter:   2,300, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 15:26:35, time (data): 0.476 (0.012)] l_pix: 4.5569e-02 l_percep: 1.4208e+00 

@@ -696,3 +696,17 @@ TunedModel(
 2024-12-09 19:26:22,796 INFO: [TwoBr..][epoch: 36, iter:   2,200, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 2:53:18, time (data): 0.321 (0.010)] l_pix: 2.8256e-02 l_percep: 1.1053e+00 
 2024-12-09 19:26:55,121 INFO: [TwoBr..][epoch: 38, iter:   2,300, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 2:52:23, time (data): 0.324 (0.012)] l_pix: 3.9354e-02 l_percep: 1.3700e+00 
 2024-12-09 19:27:26,959 INFO: [TwoBr..][epoch: 39, iter:   2,400, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 2:50:29, time (data): 0.321 (0.010)] l_pix: 3.0219e-02 l_percep: 1.1796e+00 
+2024-12-09 19:27:59,344 INFO: [TwoBr..][epoch: 41, iter:   2,500, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 2:49:46, time (data): 0.319 (0.008)] l_pix: 3.4293e-02 l_percep: 1.0404e+00 
+2024-12-09 19:28:31,471 INFO: [TwoBr..][epoch: 43, iter:   2,600, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 2:48:35, time (data): 0.320 (0.010)] l_pix: 4.0888e-02 l_percep: 1.5346e+00 
+2024-12-09 19:29:03,320 INFO: [TwoBr..][epoch: 44, iter:   2,700, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 2:46:56, time (data): 0.319 (0.008)] l_pix: 3.1098e-02 l_percep: 1.1103e+00 
+2024-12-09 19:29:35,540 INFO: [TwoBr..][epoch: 46, iter:   2,800, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 2:46:01, time (data): 0.321 (0.010)] l_pix: 3.4291e-02 l_percep: 1.2615e+00 
+2024-12-09 19:30:07,906 INFO: [TwoBr..][epoch: 48, iter:   2,900, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 2:45:23, time (data): 0.325 (0.013)] l_pix: 3.0661e-02 l_percep: 1.5174e+00 
+2024-12-09 19:30:39,647 INFO: [TwoBr..][epoch: 49, iter:   3,000, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 2:43:43, time (data): 0.321 (0.010)] l_pix: 4.4962e-02 l_percep: 1.5597e+00 
+2024-12-09 19:30:39,649 INFO: Saving models and training states.
+2024-12-09 19:30:43,774 INFO: Validation ValSet,		 # psnr: 26.2032	 # ssim: 0.8324
+2024-12-09 19:31:16,165 INFO: [TwoBr..][epoch: 51, iter:   3,100, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 2:49:45, time (data): 0.320 (0.010)] l_pix: 3.6601e-02 l_percep: 1.4132e+00 
+2024-12-09 19:31:48,393 INFO: [TwoBr..][epoch: 53, iter:   3,200, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 2:48:44, time (data): 0.321 (0.011)] l_pix: 3.6238e-02 l_percep: 1.4886e+00 
+2024-12-09 19:32:20,227 INFO: [TwoBr..][epoch: 54, iter:   3,300, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 2:47:10, time (data): 0.319 (0.008)] l_pix: 2.9488e-02 l_percep: 1.2352e+00 
+2024-12-09 19:32:52,540 INFO: [TwoBr..][epoch: 56, iter:   3,400, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 2:46:21, time (data): 0.321 (0.011)] l_pix: 2.8840e-02 l_percep: 1.2108e+00 
+2024-12-09 19:33:24,883 INFO: [TwoBr..][epoch: 58, iter:   3,500, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 2:45:36, time (data): 0.326 (0.013)] l_pix: 4.6687e-02 l_percep: 1.4819e+00 
+2024-12-09 19:33:56,726 INFO: [TwoBr..][epoch: 59, iter:   3,600, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 2:44:10, time (data): 0.322 (0.010)] l_pix: 2.6343e-02 l_percep: 1.1033e+00 
