@@ -1,33 +1,27 @@
 # general settings
 name: TwoBranch_2
-model_type: ConditionGenerator
+model_type: ImageEnhancer
 scale: 1
 num_gpu: 1  # set num_gpu: 0 for cpu mode
 manual_seed: 100
 condition: &condition
   type: mean # mean using downsampled image, histogram using histogram difference
   scale_down: 16
-weights_from_phaseI: ~
-sigma_init: 0.05
-selective: false
+  noise_level: 0.1
 
 # dataset and data loader settings
 datasets:
   train:
     name: TrainSet
     type: Dataset_PairedImage_Mask
-    dataroot_gt: "./data/LOLv1/Train/target"
-    dataroot_lq: "./data/LOLv1/Train/input"
+    dataroot_gt: ./data/LOLv1/Train/target
+    dataroot_lq: ./data/LOLv1/Train/input
     geometric_augs: true
     condition: *condition
-    labelnoise:
-      tem_mean: 1.0
-      tem_var: 0.01
-      bright_mean: 1.0
-      bright_var: 0.01
-      contrast_mean: 1.
-      contrast_var: 0.01
-
+    mim:
+      mask_ratio: 0.75
+      mask_patch_size: 1
+      model_patch_size: 1
     filename_tmpl: '{}'
     io_backend:
       type: disk
@@ -40,8 +34,8 @@ datasets:
     ### ------- Training on single fixed-patch size---------
     mini_batch_sizes: [8]
     iters: [300000]
-    gt_size: 384
-    gt_sizes: [384]
+    gt_size: 128
+    gt_sizes: [128]
     ### ------------------------------------------------------------
 
     dataset_enlarge_ratio: 1
@@ -50,8 +44,8 @@ datasets:
   val:
     name: ValSet
     type: Dataset_PairedImage_Mask
-    dataroot_gt: "./data/LOLv1/Test/target"
-    dataroot_lq: "./data/LOLv1/Test/input"
+    dataroot_gt: ./data/LOLv1/Test/target
+    dataroot_lq: ./data/LOLv1/Test/input
     condition: *condition
     io_backend:
       type: disk
@@ -59,7 +53,7 @@ datasets:
 # network structures
 network_g:
   type: TwoBranchVMUNet
-  in_channels: 3
+  in_channels: 6
   out_channels: 3
   n_feat: 32
   d_state: [1,1,1]
@@ -68,8 +62,10 @@ network_g:
   mlp_type: gdmlp
   use_pixelshuffle: true
   drop_path: 0.
+  sam: false
   stage: 1
   num_blocks: [2,2,2]
+  cross_attention_dim: 32
 
 # path
 path:
@@ -85,14 +81,14 @@ train:
 
   scheduler:
     type: CosineAnnealingRestartCyclicLR
-    periods: [200000, 50000, 50000]
+    periods: [150000, 46000, 104000]
     restart_weights: [1, 1, 1]
     eta_mins: [0.0002, 0.0002, 0.000001]
 
   optim_g:
-    type: Adam
+    type: AdamW
     lr: 0.0002
-    # weight_decay: !!float 1e-4
+    weight_decay: !!float 1e-4
     betas: [0.9, 0.999]
 
   mixing_augs:
@@ -101,16 +97,26 @@ train:
     # use_identity: true
 
 
-
   pixel_opt:
-    type: MSELoss
+    type: L1Loss
     loss_weight: 1
     reduction: mean
+
+  perceptual_opt:
+    type: PerceptualLoss
+    layer_weights:
+      'conv5_4': 1  # before relu
+    vgg_type: vgg19
+    use_input_norm: true
+    range_norm: false
+    perceptual_weight: 0.01
+    style_weight: 0
+    criterion: l1
 
 
 # validation settings
 val:
-  window_size: 4
+  window_size: 16
   val_freq: !!float 1e3
   save_img: true
   rgb2bgr: true
@@ -122,10 +128,10 @@ val:
       type: calculate_psnr
       crop_border: 0
       test_y_channel: false
-    # ssim:
-    #   type: calculate_ssim
-    #   crop_border: 0
-    #   test_y_channel: false
+    ssim:
+      type: calculate_ssim
+      crop_border: 0
+      test_y_channel: false
 
 # logging settings
 logger:

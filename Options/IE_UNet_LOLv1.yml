@@ -1,5 +1,5 @@
 # general settings
-name: IE_UNet_LOLv1
+name: TwoBranch_1
 model_type: ImageEnhancer
 scale: 1
 num_gpu: 1  # set num_gpu: 0 for cpu mode
@@ -14,8 +14,8 @@ datasets:
   train:
     name: TrainSet
     type: Dataset_PairedImage_Mask
-    dataroot_gt: /mnt/e/datasets/LOLv1/Train/target
-    dataroot_lq: /mnt/e/datasets/LOLv1/Train/input
+    dataroot_gt: ./data/LOLv1/Train/target
+    dataroot_lq: ./data/LOLv1/Train/input
     geometric_augs: true
     condition: *condition
     mim:
@@ -44,15 +44,15 @@ datasets:
   val:
     name: ValSet
     type: Dataset_PairedImage_Mask
-    dataroot_gt: /mnt/e/datasets/LOLv1/Test/target
-    dataroot_lq: /mnt/e/datasets/LOLv1/Test/input
+    dataroot_gt: ./data/LOLv1/Test/target
+    dataroot_lq: ./data/LOLv1/Test/input
     condition: *condition
     io_backend:
       type: disk
 
 # network structures
 network_g:
-  type: Network
+  type: TwoBranchVMUNet
   in_channels: 6
   out_channels: 3
   n_feat: 40

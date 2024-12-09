@@ -38,7 +38,6 @@ def _no_grad_trunc_normal_(
         tensor.mul_(std * math.sqrt(2.0))
         tensor.add_(mean)
         tensor.clamp_(min=a, max=b)
-
         return tensor
 
 def trunc_normal_(
@@ -61,11 +60,13 @@ def deconv_up(in_channels):
     )
 
 
-class CrossAttention(nn.Module):
-    """A simple cross-attention layer that takes queries from one feature map 
-    and keys/values from another feature map."""
-    def __init__(self, embed_dim, num_heads=4):
-        super(CrossAttention, self).__init__()
+class WindowedCrossAttention(nn.Module):
+    """
+    A memory-optimized cross-attention module that operates on local windows.
+    This helps reduce the OOM issue encountered with large feature maps.
+    """
+    def __init__(self, embed_dim, num_heads=2, window_size=16, downsample_factor=1):
+        super(WindowedCrossAttention, self).__init__()
         self.num_heads = num_heads
         self.head_dim = embed_dim // num_heads
         assert (embed_dim % num_heads) == 0
@@ -76,41 +77,73 @@ class CrossAttention(nn.Module):
         self.value = nn.Conv2d(embed_dim, embed_dim, kernel_size=1)
         self.out = nn.Conv2d(embed_dim, embed_dim, kernel_size=1)
 
+        self.window_size = window_size
+        self.downsample_factor = downsample_factor
+        if downsample_factor > 1:
+            self.downsample = nn.AvgPool2d(downsample_factor, downsample_factor)
+            self.upsample = nn.Upsample(scale_factor=downsample_factor, mode='nearest')
+        else:
+            self.downsample = None
+            self.upsample = None
+
     def forward(self, x_q, x_kv):
         B, C, H, W = x_q.shape
-        q = self.query(x_q)  # B,C,H,W
-        k = self.key(x_kv)   # B,C,H,W
-        v = self.value(x_kv) # B,C,H,W
+        # Optionally downsample to reduce memory
+        if self.downsample is not None:
+            x_q = self.downsample(x_q)
+            x_kv = self.downsample(x_kv)
 
-        # Reshape for multi-head attention
-        q = q.reshape(B, self.num_heads, self.head_dim, H * W)
-        k = k.reshape(B, self.num_heads, self.head_dim, H * W)
-        v = v.reshape(B, self.num_heads, self.head_dim, H * W)
+        B, C, H_ds, W_ds = x_q.shape
 
-        q = q.permute(0,1,3,2) # B,heads,HW,head_dim
-        k = k.permute(0,1,2,3) # B,heads,head_dim,HW
+        q = self.query(x_q)  # B,C,H_ds,W_ds
+        k = self.key(x_kv)
+        v = self.value(x_kv)
 
-        attn = (q @ k) * self.scale  # B,heads,HW,HW
+        # Break feature maps into windows
+        # Assume H_ds,W_ds are multiples of window_size for simplicity.
+        win = self.window_size
+        # Reshape into windows: (B, C, num_winH, win, num_winW, win)
+        q = q.reshape(B, C, H_ds//win, win, W_ds//win, win).permute(0,2,4,1,3,5) # B, nH, nW, C, win, win
+        k = k.reshape(B, C, H_ds//win, win, W_ds//win, win).permute(0,2,4,1,3,5)
+        v = v.reshape(B, C, H_ds//win, win, W_ds//win, win).permute(0,2,4,1,3,5)
+
+        # Now we have windows as (B, nH, nW, C, win, win)
+        # Reshape per window:
+        # Flatten spatial for q,k,v inside each window
+        nH = H_ds//win
+        nW = W_ds//win
+
+        q = q.reshape(B*nH*nW, self.num_heads, self.head_dim, win*win).permute(0,1,3,2) # B*nH*nW, heads, win^2, head_dim
+        k = k.reshape(B*nH*nW, self.num_heads, self.head_dim, win*win)
+        v = v.reshape(B*nH*nW, self.num_heads, self.head_dim, win*win).permute(0,1,3,2)
+
+        # q: B*nH*nW, heads, win^2, head_dim
+        # k: B*nH*nW, heads, head_dim, win^2
+        # v: B*nH*nW, heads, win^2, head_dim
+        attn = (q @ k) * self.scale  # (B*nH*nW, heads, win^2, win^2)
         attn = attn.softmax(dim=-1)
 
-        v = v.permute(0,1,3,2) # B,heads,HW,head_dim
-        out = attn @ v # B,heads,HW,head_dim
-        out = out.permute(0,1,3,2).reshape(B, C, H, W)
+        out = attn @ v # (B*nH*nW, heads, win^2, head_dim)
+        out = out.permute(0,1,3,2).reshape(B*nH*nW, C, win, win)
+
+        # Merge windows back
+        out = out.reshape(B, nH, nW, C, win, win).permute(0,3,1,4,2,5).reshape(B,C,H_ds,W_ds)
+
         out = self.out(out)
+
+        # Upsample if downsampled
+        if self.upsample is not None:
+            out = self.upsample(out)
+
         return out
 
 
 @ARCH_REGISTRY.register()
 class TwoBranchVMUNet(nn.Module):
     """
-    A two-branch U-Net style architecture that:
-    - Decomposes the input image into multiple components (e.g. H, V, I).
-    - Processes them with two VMUNet-like branches.
-    - Uses a cross-attention layer in the middle to exchange information.
-    - Then refines and recomposes the output.
-
-    This is designed so that the decomposition/recomposition steps can be changed easily in the future.
-    The main structure is similar to VMUNet but now we have two sets of encoders/decoders and a cross-attention block.
+    A two-branch U-Net style architecture with a cross-attention layer optimized for memory:
+    - Uses window-based cross-attention to reduce OOM issues.
+    - Incorporates a two-branch decomposition and recomposition approach.
     """
 
     def __init__(
@@ -126,15 +159,15 @@ class TwoBranchVMUNet(nn.Module):
         mlp_type="gdmlp",
         use_pixelshuffle=False,
         last_act=None,
-        # Additional parameters for two-branch structure
-        # Suppose we decompose image into H, V, I (3 channels) and split them into two branches:
-        # branch1_in_channels and branch2_in_channels define how we split.
-        # For example, if we have 3 channels (H,V,I) and we want two branches:
-        #   branch1 gets H,V (2 channels)
-        #   branch2 gets I (1 channel)
+        drop_path=0,
+        sam=0,
         branch1_in_channels=2,
         branch2_in_channels=1,
-        cross_attention_dim=40,  # dimension at which to apply cross-attention
+        cross_attention_dim=40,
+        # Additional config for memory optimization
+        cross_attention_heads=2,
+        cross_window_size=16,
+        cross_downsample=1
     ):
         super(TwoBranchVMUNet, self).__init__()
         self.stage = stage
@@ -153,7 +186,6 @@ class TwoBranchVMUNet(nn.Module):
         else:
             raise NotImplementedError
 
-        # Define down/up sampling
         if use_pixelshuffle:
             down_layer = conv_down
             up_layer = deconv_up
@@ -162,23 +194,17 @@ class TwoBranchVMUNet(nn.Module):
             up_layer = deconv_up
 
         # ========== Branch 1 ==========
-        # First conv for branch 1
         self.branch1_first_conv = nn.Conv2d(branch1_in_channels, n_feat, 3, 1, 1, bias=True)
         nn.init.kaiming_normal_(self.branch1_first_conv.weight, mode="fan_out", nonlinearity="linear")
         if self.branch1_first_conv.bias is not None:
             nn.init.zeros_(self.branch1_first_conv.bias)
 
-        # Encoders for branch 1
         self.branch1_encoders = nn.ModuleList()
         curr_dim = n_feat
         for i in range(self.num_levels - 1):
             self.branch1_encoders.append(self._make_level(curr_dim, num_blocks[i], d_state[i], ssm_ratio, mlp_ratio, mlp_type))
             curr_dim *= 2
-
-        # Bottleneck for branch 1
         self.branch1_bottleneck = self._make_level(curr_dim, num_blocks[-1], d_state[-1], ssm_ratio, mlp_ratio, mlp_type)
-
-        # Decoders for branch 1
         self.branch1_decoders = nn.ModuleList()
         for i in range(self.num_levels - 2, -1, -1):
             self.branch1_decoders.append(nn.ModuleDict({
@@ -190,7 +216,6 @@ class TwoBranchVMUNet(nn.Module):
 
         self.branch1_proj = nn.Conv2d(n_feat, n_feat, 3, 1, 1, bias=True)
         nn.init.zeros_(self.branch1_proj.bias)
-
         self.branch1_down_layers = nn.ModuleList([down_layer(n_feat * (2 ** i)) for i in range(self.num_levels - 1)])
 
         # ========== Branch 2 ==========
@@ -204,9 +229,7 @@ class TwoBranchVMUNet(nn.Module):
         for i in range(self.num_levels - 1):
             self.branch2_encoders.append(self._make_level(curr_dim, num_blocks[i], d_state[i], ssm_ratio, mlp_ratio, mlp_type))
             curr_dim *= 2
-
         self.branch2_bottleneck = self._make_level(curr_dim, num_blocks[-1], d_state[-1], ssm_ratio, mlp_ratio, mlp_type)
-
         self.branch2_decoders = nn.ModuleList()
         for i in range(self.num_levels - 2, -1, -1):
             self.branch2_decoders.append(nn.ModuleDict({
@@ -218,14 +241,17 @@ class TwoBranchVMUNet(nn.Module):
 
         self.branch2_proj = nn.Conv2d(n_feat, n_feat, 3, 1, 1, bias=True)
         nn.init.zeros_(self.branch2_proj.bias)
-
         self.branch2_down_layers = nn.ModuleList([down_layer(n_feat * (2 ** i)) for i in range(self.num_levels - 1)])
 
-        # Cross-attention after bottleneck
-        self.cross_attention = CrossAttention(cross_attention_dim, num_heads=4)
+        # Cross-attention (windowed)
+        self.cross_attention = WindowedCrossAttention(
+            cross_attention_dim, 
+            num_heads=cross_attention_heads, 
+            window_size=cross_window_size,
+            downsample_factor=cross_downsample
+        )
 
-        # Refinement layer after recombining the two branches
-        # Let's do a simple conv block as refinement
+        # Refinement
         self.refinement = nn.Sequential(
             nn.Conv2d(n_feat*2, n_feat, 3, 1, 1, bias=True),
             nn.ReLU(inplace=True),
@@ -274,79 +300,21 @@ class TwoBranchVMUNet(nn.Module):
         return nn.Sequential(*layers)
 
     def decompose_fn(self, x):
-        """
-        Decompose the input into two branches.
-        For demonstration, we assume we split into H, V, I from an RGB image.
-        In practice, you can replace this with any decomposition.
-        
-        Here, let's say we want:
-        - H, V from the first two channels (just a placeholder)
-        - I from the last channel
-
-        If the input is RGB: we can convert to some space (like HVI).
-        For now, let's simulate HVI as a dummy decomposition:
-
-        H = 0.299*R + 0.587*G + 0.114*B
-        V = R - B  (just a placeholder)
-        I = G       (just a placeholder)
-        """
+        # Dummy decomposition into H, V, I
         r = x[:,0:1]
         g = x[:,1:2]
         b = x[:,2:3]
 
-        # Dummy decomposition:
         H = 0.299*r + 0.587*g + 0.114*b
         V = r - b
         I = g
 
-        # Now assign them to two branches:
-        # Branch1 = H,V (2-channels)
-        # Branch2 = I   (1-channel)
         branch1_in = torch.cat([H, V], dim=1)
         branch2_in = I
         return branch1_in, branch2_in, (H, V, I)
 
     def recompose_fn(self, H, V, I):
-        """
-        Recompose from H, V, I back to RGB or the final desired color space.
-        This is a placeholder inverse of the dummy decomposition above.
-        
-        If:
-        H = 0.299R + 0.587G + 0.114B
-        V = R - B
-        I = G
-
-        Let's solve a simple system (this is just for demonstration):
-        I = G
-        H = 0.299R + 0.587G + 0.114B
-        V = R - B
-
-        From I = G, we get G = I.
-        From V = R - B, let R = V + B.
-        Substitute R into H:
-        H = 0.299(V+B) + 0.587I + 0.114B
-          = 0.299V + (0.299+0.114)*B + 0.587I
-          = 0.299V + 0.413B + 0.587I
-
-        We have two unknowns V and B in H. This is not a well-defined system.
-        For simplicity, let's assume B = I (just a placeholder guess).
-        If B = I, then R = V + I.
-
-        Then:
-        H ≈ 0.299V + 0.413I + 0.587I
-          = 0.299V + 1.0I
-        => 0.299V = H - I
-        V = (H - I)/0.299
-
-        This gets complicated, but since this is just a placeholder, 
-        we'll just do a simple linear combination to get back some RGB-like output:
-        Let's just do a trivial recomposition:
-        R = I + V
-        G = I
-        B = I
-
-        This is not a true inverse, but a placeholder so you can later replace with proper inverse.
-        """
+        # Placeholder recompose (not exact inverse)
         R = I + V
         G = I
         B = I
@@ -371,36 +339,50 @@ class TwoBranchVMUNet(nn.Module):
             fea = dec['block'](fea)
         return fea
 
-    def forward(self, x):
-        # Decompose input
-        branch1_in, branch2_in, (H,V,I) = self.decompose_fn(x)
+    def forward(self, x, mask=None):
+        # Decompose input into H, V, I and feed into two branches
+        branch1_in, branch2_in, (H, V, I) = self.decompose_fn(x)
 
         # Forward branch 1
         branch1_fea = self.branch1_first_conv(branch1_in)
-        branch1_out = self.forward_single_branch(branch1_fea, self.branch1_encoders, self.branch1_bottleneck, self.branch1_decoders, self.branch1_down_layers)
+        branch1_out = self.forward_single_branch(
+            branch1_fea, 
+            self.branch1_encoders, 
+            self.branch1_bottleneck, 
+            self.branch1_decoders, 
+            self.branch1_down_layers
+        )
         branch1_out = self.branch1_proj(branch1_out)
 
         # Forward branch 2
         branch2_fea = self.branch2_first_conv(branch2_in)
-        branch2_out = self.forward_single_branch(branch2_fea, self.branch2_encoders, self.branch2_bottleneck, self.branch2_decoders, self.branch2_down_layers)
+        branch2_out = self.forward_single_branch(
+            branch2_fea, 
+            self.branch2_encoders, 
+            self.branch2_bottleneck, 
+            self.branch2_decoders, 
+            self.branch2_down_layers
+        )
         branch2_out = self.branch2_proj(branch2_out)
 
-        # Cross-attention
-        # We apply cross-attention between the outputs of the two branches
-        # Assume same spatial size:
+        # Cross-attention between the two branches
         combined1 = self.cross_attention(branch1_out, branch2_out)
         combined2 = self.cross_attention(branch2_out, branch1_out)
+
         # Fuse the two combined features
         fused = torch.cat([combined1, combined2], dim=1)
 
-        # Refinement
-        out = self.refinement(fused)
-        out = self.last_act(out)
+        # Refinement - now let's assume the refinement output is in H, V, I space
+        out = self.refinement(fused)  # out: B x 3 x H x W
+        # Assume out[:,0:1] = H_pred, out[:,1:2] = V_pred, out[:,2:3] = I_pred
+        H_pred = out[:, 0:1]
+        V_pred = out[:, 1:2]
+        I_pred = out[:, 2:3]
 
-        # In this example, we recompose from H,V,I if desired.
-        # But we ended up producing RGB already from refinement.
-        # If you want to strictly follow the decomposition and recompose after processing the separate components:
-        # You can run a recompose function if needed.
-        # For demonstration, we will assume refinement outputs final RGB.
+        # Recompose to get final RGB output
+        final_rgb = self.recompose_fn(H_pred, V_pred, I_pred)
         
-        return [x, out]
+        # Apply last activation if any
+        final_rgb = self.last_act(final_rgb)
+
+        return [x, final_rgb]
