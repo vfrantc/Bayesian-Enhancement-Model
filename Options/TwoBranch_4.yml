@@ -52,10 +52,10 @@ datasets:
 
 # network structures
 network_g:
-  type: TwoBranchVMUNet
+  type: TunedModel
   in_channels: 6
   out_channels: 3
-  n_feat: 32
+  n_feat: 40
   d_state: [1,1,1]
   ssm_ratio: 1
   mlp_ratio: 4
@@ -64,8 +64,7 @@ network_g:
   drop_path: 0.
   sam: false
   stage: 1
-  num_blocks: [2,3,2]
-  cross_attention_dim: 32
+  num_blocks: [3,3,3]
 
 # path
 path:

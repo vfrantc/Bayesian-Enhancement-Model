@@ -2,9 +2,9 @@ nohup: ignoring input
 Cannot import dcn. Ignore this warning if dcn is not used. Otherwise install BasicSR with compiling dcn.
 Cannot import selective_scan_cuda. This affects speed.
 Disable distributed.
-Path already exists. Rename it to /home/vladimirfrants9/Bayesian-Enhancement-Model/experiments/TwoBranch_2_archived_20241209_122608
-Path already exists. Rename it to /home/vladimirfrants9/Bayesian-Enhancement-Model/tb_logger/TwoBranch_2_archived_20241209_122608
-2024-12-09 12:26:08,717 INFO: 
+Path already exists. Rename it to /home/vladimirfrants9/Bayesian-Enhancement-Model/experiments/TwoBranch_2_archived_20241209_191452
+Path already exists. Rename it to /home/vladimirfrants9/Bayesian-Enhancement-Model/tb_logger/TwoBranch_2_archived_20241209_191452
+2024-12-09 19:14:52,322 INFO: 
                 ____                _       _____  ____
                / __ ) ____ _ _____ (_)_____/ ___/ / __ \
               / __  |/ __ `// ___// // ___/\__ \ / /_/ /
@@ -20,7 +20,7 @@ Version Information:
 	BasicSR: 1.2.0+d419381
 	PyTorch: 1.13.1+cu117
 	TorchVision: 0.14.1+cu117
-2024-12-09 12:26:08,717 INFO: 
+2024-12-09 19:14:52,322 INFO: 
   name: TwoBranch_2
   model_type: ImageEnhancer
   scale: 1
@@ -82,20 +82,19 @@ Version Information:
     ]
   ]
   network_g:[
-    type: TwoBranchVMUNet
+    type: TunedModel
     in_channels: 6
     out_channels: 3
-    n_feat: 32
+    n_feat: 40
     d_state: [1, 1, 1]
     ssm_ratio: 1
-    mlp_ratio: 4
+    mlp_ratio: 2
     mlp_type: gdmlp
     use_pixelshuffle: True
     drop_path: 0.0
     sam: False
     stage: 1
     num_blocks: [2, 2, 2]
-    cross_attention_dim: 32
   ]
   path:[
     pretrain_network_g: None
@@ -185,505 +184,519 @@ Version Information:
   is_train: True
   root_path: /home/vladimirfrants9/Bayesian-Enhancement-Model
 
-2024-12-09 12:26:09,447 INFO: Use wandb logger with id=5dplghsl; project=underwater.
-2024-12-09 12:26:09,470 INFO: Dataset [Dataset_PairedImage_Mask] - TrainSet is built.
-2024-12-09 12:26:09,470 INFO: Training statistics:
+2024-12-09 19:14:53,069 INFO: Use wandb logger with id=y6y12rxm; project=underwater.
+2024-12-09 19:14:53,091 INFO: Dataset [Dataset_PairedImage_Mask] - TrainSet is built.
+2024-12-09 19:14:53,092 INFO: Training statistics:
 	Number of train images: 485
 	Dataset enlarge ratio: 1
 	Batch size per gpu: 8
 	World size (gpu number): 1
 	Require iter number per epoch: 61
 	Total epochs: 4919; iters: 300000.
-2024-12-09 12:26:09,471 INFO: Dataset [Dataset_PairedImage_Mask] - ValSet is built.
-2024-12-09 12:26:09,471 INFO: Number of val images/folders in ValSet: 15
-2024-12-09 12:26:09,541 INFO: Network [TwoBranchVMUNet] is created.
-2024-12-09 12:26:10,873 INFO: Loss [L1Loss] is created.
-2024-12-09 12:26:12,149 INFO: Loss [PerceptualLoss] is created.
-TwoBranchVMUNet(
+2024-12-09 19:14:53,093 INFO: Dataset [Dataset_PairedImage_Mask] - ValSet is built.
+2024-12-09 19:14:53,093 INFO: Number of val images/folders in ValSet: 15
+2024-12-09 19:14:53,164 INFO: Network [TunedModel] is created.
+2024-12-09 19:14:54,457 INFO: Loss [L1Loss] is created.
+2024-12-09 19:14:55,741 INFO: Loss [PerceptualLoss] is created.
+TunedModel(
+  (first_conv): Conv2d(6, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (encoders): ModuleList(
+    (0): Sequential(
+      (0): VSSBlock(
+        (norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+        (op): SS2D(
+          (out_norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+          (in_proj): Linear2d(in_features=40, out_features=40, bias=False)
+          (act): SiLU()
+          (conv2d): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+          (out_act): Identity()
+          (out_proj): Linear2d(in_features=40, out_features=40, bias=False)
+          (dropout): Identity()
+        )
+        (drop_path): timm.DropPath(0)
+        (norm2): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+        (mlp): gdMlp(
+          (project_in): Conv2d(40, 160, kernel_size=(1, 1), stride=(1, 1))
+          (dwconv): Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=160)
+          (project_out): Conv2d(80, 40, kernel_size=(1, 1), stride=(1, 1))
+          (act): GELU(approximate='none')
+        )
+      )
+      (1): VSSBlock(
+        (norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+        (op): SS2D(
+          (out_norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+          (in_proj): Linear2d(in_features=40, out_features=40, bias=False)
+          (act): SiLU()
+          (conv2d): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+          (out_act): Identity()
+          (out_proj): Linear2d(in_features=40, out_features=40, bias=False)
+          (dropout): Identity()
+        )
+        (drop_path): timm.DropPath(0)
+        (norm2): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+        (mlp): gdMlp(
+          (project_in): Conv2d(40, 160, kernel_size=(1, 1), stride=(1, 1))
+          (dwconv): Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=160)
+          (project_out): Conv2d(80, 40, kernel_size=(1, 1), stride=(1, 1))
+          (act): GELU(approximate='none')
+        )
+      )
+    )
+    (1): Sequential(
+      (0): VSSBlock(
+        (norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+        (op): SS2D(
+          (out_norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+          (in_proj): Linear2d(in_features=80, out_features=80, bias=False)
+          (act): SiLU()
+          (conv2d): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+          (out_act): Identity()
+          (out_proj): Linear2d(in_features=80, out_features=80, bias=False)
+          (dropout): Identity()
+        )
+        (drop_path): timm.DropPath(0)
+        (norm2): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+        (mlp): gdMlp(
+          (project_in): Conv2d(80, 320, kernel_size=(1, 1), stride=(1, 1))
+          (dwconv): Conv2d(320, 320, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=320)
+          (project_out): Conv2d(160, 80, kernel_size=(1, 1), stride=(1, 1))
+          (act): GELU(approximate='none')
+        )
+      )
+      (1): VSSBlock(
+        (norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+        (op): SS2D(
+          (out_norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+          (in_proj): Linear2d(in_features=80, out_features=80, bias=False)
+          (act): SiLU()
+          (conv2d): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+          (out_act): Identity()
+          (out_proj): Linear2d(in_features=80, out_features=80, bias=False)
+          (dropout): Identity()
+        )
+        (drop_path): timm.DropPath(0)
+        (norm2): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+        (mlp): gdMlp(
+          (project_in): Conv2d(80, 320, kernel_size=(1, 1), stride=(1, 1))
+          (dwconv): Conv2d(320, 320, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=320)
+          (project_out): Conv2d(160, 80, kernel_size=(1, 1), stride=(1, 1))
+          (act): GELU(approximate='none')
+        )
+      )
+    )
+  )
+  (bottleneck): Sequential(
+    (0): VSSBlock(
+      (norm): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
+      (op): SS2D(
+        (out_norm): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
+        (in_proj): Linear2d(in_features=160, out_features=160, bias=False)
+        (act): SiLU()
+        (conv2d): Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=160, bias=False)
+        (out_act): Identity()
+        (out_proj): Linear2d(in_features=160, out_features=160, bias=False)
+        (dropout): Identity()
+      )
+      (drop_path): timm.DropPath(0)
+      (norm2): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
+      (mlp): gdMlp(
+        (project_in): Conv2d(160, 640, kernel_size=(1, 1), stride=(1, 1))
+        (dwconv): Conv2d(640, 640, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=640)
+        (project_out): Conv2d(320, 160, kernel_size=(1, 1), stride=(1, 1))
+        (act): GELU(approximate='none')
+      )
+    )
+    (1): VSSBlock(
+      (norm): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
+      (op): SS2D(
+        (out_norm): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
+        (in_proj): Linear2d(in_features=160, out_features=160, bias=False)
+        (act): SiLU()
+        (conv2d): Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=160, bias=False)
+        (out_act): Identity()
+        (out_proj): Linear2d(in_features=160, out_features=160, bias=False)
+        (dropout): Identity()
+      )
+      (drop_path): timm.DropPath(0)
+      (norm2): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
+      (mlp): gdMlp(
+        (project_in): Conv2d(160, 640, kernel_size=(1, 1), stride=(1, 1))
+        (dwconv): Conv2d(640, 640, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=640)
+        (project_out): Conv2d(320, 160, kernel_size=(1, 1), stride=(1, 1))
+        (act): GELU(approximate='none')
+      )
+    )
+  )
+  (decoders): ModuleList(
+    (0): ModuleDict(
+      (up): ConvTranspose2d(160, 80, kernel_size=(2, 2), stride=(2, 2))
+      (fuse): Conv2d(160, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (block): Sequential(
+        (0): VSSBlock(
+          (norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+          (op): SS2D(
+            (out_norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+            (in_proj): Linear2d(in_features=80, out_features=80, bias=False)
+            (act): SiLU()
+            (conv2d): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+            (out_act): Identity()
+            (out_proj): Linear2d(in_features=80, out_features=80, bias=False)
+            (dropout): Identity()
+          )
+          (drop_path): timm.DropPath(0)
+          (norm2): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+          (mlp): gdMlp(
+            (project_in): Conv2d(80, 320, kernel_size=(1, 1), stride=(1, 1))
+            (dwconv): Conv2d(320, 320, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=320)
+            (project_out): Conv2d(160, 80, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate='none')
+          )
+        )
+        (1): VSSBlock(
+          (norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+          (op): SS2D(
+            (out_norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+            (in_proj): Linear2d(in_features=80, out_features=80, bias=False)
+            (act): SiLU()
+            (conv2d): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+            (out_act): Identity()
+            (out_proj): Linear2d(in_features=80, out_features=80, bias=False)
+            (dropout): Identity()
+          )
+          (drop_path): timm.DropPath(0)
+          (norm2): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+          (mlp): gdMlp(
+            (project_in): Conv2d(80, 320, kernel_size=(1, 1), stride=(1, 1))
+            (dwconv): Conv2d(320, 320, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=320)
+            (project_out): Conv2d(160, 80, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate='none')
+          )
+        )
+      )
+    )
+    (1): ModuleDict(
+      (up): ConvTranspose2d(80, 40, kernel_size=(2, 2), stride=(2, 2))
+      (fuse): Conv2d(80, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (block): Sequential(
+        (0): VSSBlock(
+          (norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+          (op): SS2D(
+            (out_norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+            (in_proj): Linear2d(in_features=40, out_features=40, bias=False)
+            (act): SiLU()
+            (conv2d): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+            (out_act): Identity()
+            (out_proj): Linear2d(in_features=40, out_features=40, bias=False)
+            (dropout): Identity()
+          )
+          (drop_path): timm.DropPath(0)
+          (norm2): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+          (mlp): gdMlp(
+            (project_in): Conv2d(40, 160, kernel_size=(1, 1), stride=(1, 1))
+            (dwconv): Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=160)
+            (project_out): Conv2d(80, 40, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate='none')
+          )
+        )
+        (1): VSSBlock(
+          (norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+          (op): SS2D(
+            (out_norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+            (in_proj): Linear2d(in_features=40, out_features=40, bias=False)
+            (act): SiLU()
+            (conv2d): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+            (out_act): Identity()
+            (out_proj): Linear2d(in_features=40, out_features=40, bias=False)
+            (dropout): Identity()
+          )
+          (drop_path): timm.DropPath(0)
+          (norm2): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+          (mlp): gdMlp(
+            (project_in): Conv2d(40, 160, kernel_size=(1, 1), stride=(1, 1))
+            (dwconv): Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=160)
+            (project_out): Conv2d(80, 40, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate='none')
+          )
+        )
+      )
+    )
+  )
+  (proj): Conv2d(40, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
   (last_act): Identity()
-  (branch1_first_conv): Conv2d(2, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (branch1_encoders): ModuleList(
+  (down_layers): ModuleList(
+    (0): Conv2d(40, 80, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1), bias=False)
+    (1): Conv2d(80, 160, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1), bias=False)
+  )
+  (first_conv2): Conv2d(6, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (encoders2): ModuleList(
     (0): Sequential(
       (0): VSSBlock(
-        (norm): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
+        (norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
         (op): SS2D(
-          (out_norm): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
-          (in_proj): Linear2d(in_features=32, out_features=32, bias=False)
+          (out_norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+          (in_proj): Linear2d(in_features=40, out_features=40, bias=False)
           (act): SiLU()
-          (conv2d): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=32, bias=False)
+          (conv2d): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
           (out_act): Identity()
-          (out_proj): Linear2d(in_features=32, out_features=32, bias=False)
+          (out_proj): Linear2d(in_features=40, out_features=40, bias=False)
           (dropout): Identity()
         )
         (drop_path): timm.DropPath(0)
-        (norm2): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
+        (norm2): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
         (mlp): gdMlp(
-          (project_in): Conv2d(32, 256, kernel_size=(1, 1), stride=(1, 1))
-          (dwconv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=256)
-          (project_out): Conv2d(128, 32, kernel_size=(1, 1), stride=(1, 1))
+          (project_in): Conv2d(40, 160, kernel_size=(1, 1), stride=(1, 1))
+          (dwconv): Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=160)
+          (project_out): Conv2d(80, 40, kernel_size=(1, 1), stride=(1, 1))
           (act): GELU(approximate='none')
         )
       )
       (1): VSSBlock(
-        (norm): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
+        (norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
         (op): SS2D(
-          (out_norm): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
-          (in_proj): Linear2d(in_features=32, out_features=32, bias=False)
+          (out_norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+          (in_proj): Linear2d(in_features=40, out_features=40, bias=False)
           (act): SiLU()
-          (conv2d): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=32, bias=False)
+          (conv2d): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
           (out_act): Identity()
-          (out_proj): Linear2d(in_features=32, out_features=32, bias=False)
+          (out_proj): Linear2d(in_features=40, out_features=40, bias=False)
           (dropout): Identity()
         )
         (drop_path): timm.DropPath(0)
-        (norm2): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
+        (norm2): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
         (mlp): gdMlp(
-          (project_in): Conv2d(32, 256, kernel_size=(1, 1), stride=(1, 1))
-          (dwconv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=256)
-          (project_out): Conv2d(128, 32, kernel_size=(1, 1), stride=(1, 1))
+          (project_in): Conv2d(40, 160, kernel_size=(1, 1), stride=(1, 1))
+          (dwconv): Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=160)
+          (project_out): Conv2d(80, 40, kernel_size=(1, 1), stride=(1, 1))
           (act): GELU(approximate='none')
         )
       )
     )
     (1): Sequential(
       (0): VSSBlock(
-        (norm): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
+        (norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
         (op): SS2D(
-          (out_norm): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
-          (in_proj): Linear2d(in_features=64, out_features=64, bias=False)
+          (out_norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+          (in_proj): Linear2d(in_features=80, out_features=80, bias=False)
           (act): SiLU()
-          (conv2d): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64, bias=False)
+          (conv2d): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
           (out_act): Identity()
-          (out_proj): Linear2d(in_features=64, out_features=64, bias=False)
+          (out_proj): Linear2d(in_features=80, out_features=80, bias=False)
           (dropout): Identity()
         )
         (drop_path): timm.DropPath(0)
-        (norm2): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
+        (norm2): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
         (mlp): gdMlp(
-          (project_in): Conv2d(64, 512, kernel_size=(1, 1), stride=(1, 1))
-          (dwconv): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=512)
-          (project_out): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1))
+          (project_in): Conv2d(80, 320, kernel_size=(1, 1), stride=(1, 1))
+          (dwconv): Conv2d(320, 320, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=320)
+          (project_out): Conv2d(160, 80, kernel_size=(1, 1), stride=(1, 1))
           (act): GELU(approximate='none')
         )
       )
       (1): VSSBlock(
-        (norm): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
+        (norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
         (op): SS2D(
-          (out_norm): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
-          (in_proj): Linear2d(in_features=64, out_features=64, bias=False)
+          (out_norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+          (in_proj): Linear2d(in_features=80, out_features=80, bias=False)
           (act): SiLU()
-          (conv2d): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64, bias=False)
+          (conv2d): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
           (out_act): Identity()
-          (out_proj): Linear2d(in_features=64, out_features=64, bias=False)
+          (out_proj): Linear2d(in_features=80, out_features=80, bias=False)
           (dropout): Identity()
         )
         (drop_path): timm.DropPath(0)
-        (norm2): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
+        (norm2): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
         (mlp): gdMlp(
-          (project_in): Conv2d(64, 512, kernel_size=(1, 1), stride=(1, 1))
-          (dwconv): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=512)
-          (project_out): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1))
+          (project_in): Conv2d(80, 320, kernel_size=(1, 1), stride=(1, 1))
+          (dwconv): Conv2d(320, 320, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=320)
+          (project_out): Conv2d(160, 80, kernel_size=(1, 1), stride=(1, 1))
           (act): GELU(approximate='none')
         )
       )
     )
   )
-  (branch1_bottleneck): Sequential(
+  (bottleneck2): Sequential(
     (0): VSSBlock(
-      (norm): LayerNorm2d((128,), eps=1e-05, elementwise_affine=True)
+      (norm): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
       (op): SS2D(
-        (out_norm): LayerNorm2d((128,), eps=1e-05, elementwise_affine=True)
-        (in_proj): Linear2d(in_features=128, out_features=128, bias=False)
+        (out_norm): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
+        (in_proj): Linear2d(in_features=160, out_features=160, bias=False)
         (act): SiLU()
-        (conv2d): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+        (conv2d): Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=160, bias=False)
         (out_act): Identity()
-        (out_proj): Linear2d(in_features=128, out_features=128, bias=False)
+        (out_proj): Linear2d(in_features=160, out_features=160, bias=False)
         (dropout): Identity()
       )
       (drop_path): timm.DropPath(0)
-      (norm2): LayerNorm2d((128,), eps=1e-05, elementwise_affine=True)
+      (norm2): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
       (mlp): gdMlp(
-        (project_in): Conv2d(128, 1024, kernel_size=(1, 1), stride=(1, 1))
-        (dwconv): Conv2d(1024, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=1024)
-        (project_out): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1))
+        (project_in): Conv2d(160, 640, kernel_size=(1, 1), stride=(1, 1))
+        (dwconv): Conv2d(640, 640, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=640)
+        (project_out): Conv2d(320, 160, kernel_size=(1, 1), stride=(1, 1))
         (act): GELU(approximate='none')
       )
     )
     (1): VSSBlock(
-      (norm): LayerNorm2d((128,), eps=1e-05, elementwise_affine=True)
+      (norm): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
       (op): SS2D(
-        (out_norm): LayerNorm2d((128,), eps=1e-05, elementwise_affine=True)
-        (in_proj): Linear2d(in_features=128, out_features=128, bias=False)
+        (out_norm): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
+        (in_proj): Linear2d(in_features=160, out_features=160, bias=False)
         (act): SiLU()
-        (conv2d): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+        (conv2d): Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=160, bias=False)
         (out_act): Identity()
-        (out_proj): Linear2d(in_features=128, out_features=128, bias=False)
+        (out_proj): Linear2d(in_features=160, out_features=160, bias=False)
         (dropout): Identity()
       )
       (drop_path): timm.DropPath(0)
-      (norm2): LayerNorm2d((128,), eps=1e-05, elementwise_affine=True)
+      (norm2): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
       (mlp): gdMlp(
-        (project_in): Conv2d(128, 1024, kernel_size=(1, 1), stride=(1, 1))
-        (dwconv): Conv2d(1024, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=1024)
-        (project_out): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1))
+        (project_in): Conv2d(160, 640, kernel_size=(1, 1), stride=(1, 1))
+        (dwconv): Conv2d(640, 640, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=640)
+        (project_out): Conv2d(320, 160, kernel_size=(1, 1), stride=(1, 1))
         (act): GELU(approximate='none')
       )
     )
   )
-  (branch1_decoders): ModuleList(
+  (decoders2): ModuleList(
     (0): ModuleDict(
-      (up): ConvTranspose2d(128, 64, kernel_size=(2, 2), stride=(2, 2))
-      (fuse): Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (up): ConvTranspose2d(160, 80, kernel_size=(2, 2), stride=(2, 2))
+      (fuse): Conv2d(160, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
       (block): Sequential(
         (0): VSSBlock(
-          (norm): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
+          (norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
           (op): SS2D(
-            (out_norm): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
-            (in_proj): Linear2d(in_features=64, out_features=64, bias=False)
+            (out_norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+            (in_proj): Linear2d(in_features=80, out_features=80, bias=False)
             (act): SiLU()
-            (conv2d): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64, bias=False)
+            (conv2d): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
             (out_act): Identity()
-            (out_proj): Linear2d(in_features=64, out_features=64, bias=False)
+            (out_proj): Linear2d(in_features=80, out_features=80, bias=False)
             (dropout): Identity()
           )
           (drop_path): timm.DropPath(0)
-          (norm2): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
           (mlp): gdMlp(
-            (project_in): Conv2d(64, 512, kernel_size=(1, 1), stride=(1, 1))
-            (dwconv): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=512)
-            (project_out): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1))
+            (project_in): Conv2d(80, 320, kernel_size=(1, 1), stride=(1, 1))
+            (dwconv): Conv2d(320, 320, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=320)
+            (project_out): Conv2d(160, 80, kernel_size=(1, 1), stride=(1, 1))
             (act): GELU(approximate='none')
           )
         )
         (1): VSSBlock(
-          (norm): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
+          (norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
           (op): SS2D(
-            (out_norm): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
-            (in_proj): Linear2d(in_features=64, out_features=64, bias=False)
+            (out_norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+            (in_proj): Linear2d(in_features=80, out_features=80, bias=False)
             (act): SiLU()
-            (conv2d): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64, bias=False)
+            (conv2d): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
             (out_act): Identity()
-            (out_proj): Linear2d(in_features=64, out_features=64, bias=False)
+            (out_proj): Linear2d(in_features=80, out_features=80, bias=False)
             (dropout): Identity()
           )
           (drop_path): timm.DropPath(0)
-          (norm2): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
           (mlp): gdMlp(
-            (project_in): Conv2d(64, 512, kernel_size=(1, 1), stride=(1, 1))
-            (dwconv): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=512)
-            (project_out): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1))
+            (project_in): Conv2d(80, 320, kernel_size=(1, 1), stride=(1, 1))
+            (dwconv): Conv2d(320, 320, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=320)
+            (project_out): Conv2d(160, 80, kernel_size=(1, 1), stride=(1, 1))
             (act): GELU(approximate='none')
           )
         )
       )
     )
     (1): ModuleDict(
-      (up): ConvTranspose2d(64, 32, kernel_size=(2, 2), stride=(2, 2))
-      (fuse): Conv2d(64, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (up): ConvTranspose2d(80, 40, kernel_size=(2, 2), stride=(2, 2))
+      (fuse): Conv2d(80, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
       (block): Sequential(
         (0): VSSBlock(
-          (norm): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
+          (norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
           (op): SS2D(
-            (out_norm): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
-            (in_proj): Linear2d(in_features=32, out_features=32, bias=False)
+            (out_norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+            (in_proj): Linear2d(in_features=40, out_features=40, bias=False)
             (act): SiLU()
-            (conv2d): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=32, bias=False)
+            (conv2d): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
             (out_act): Identity()
-            (out_proj): Linear2d(in_features=32, out_features=32, bias=False)
+            (out_proj): Linear2d(in_features=40, out_features=40, bias=False)
             (dropout): Identity()
           )
           (drop_path): timm.DropPath(0)
-          (norm2): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
           (mlp): gdMlp(
-            (project_in): Conv2d(32, 256, kernel_size=(1, 1), stride=(1, 1))
-            (dwconv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=256)
-            (project_out): Conv2d(128, 32, kernel_size=(1, 1), stride=(1, 1))
+            (project_in): Conv2d(40, 160, kernel_size=(1, 1), stride=(1, 1))
+            (dwconv): Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=160)
+            (project_out): Conv2d(80, 40, kernel_size=(1, 1), stride=(1, 1))
             (act): GELU(approximate='none')
           )
         )
         (1): VSSBlock(
-          (norm): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
+          (norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
           (op): SS2D(
-            (out_norm): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
-            (in_proj): Linear2d(in_features=32, out_features=32, bias=False)
+            (out_norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+            (in_proj): Linear2d(in_features=40, out_features=40, bias=False)
             (act): SiLU()
-            (conv2d): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=32, bias=False)
+            (conv2d): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
             (out_act): Identity()
-            (out_proj): Linear2d(in_features=32, out_features=32, bias=False)
+            (out_proj): Linear2d(in_features=40, out_features=40, bias=False)
             (dropout): Identity()
           )
           (drop_path): timm.DropPath(0)
-          (norm2): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
           (mlp): gdMlp(
-            (project_in): Conv2d(32, 256, kernel_size=(1, 1), stride=(1, 1))
-            (dwconv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=256)
-            (project_out): Conv2d(128, 32, kernel_size=(1, 1), stride=(1, 1))
+            (project_in): Conv2d(40, 160, kernel_size=(1, 1), stride=(1, 1))
+            (dwconv): Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=160)
+            (project_out): Conv2d(80, 40, kernel_size=(1, 1), stride=(1, 1))
             (act): GELU(approximate='none')
           )
         )
       )
     )
   )
-  (branch1_proj): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (branch1_down_layers): ModuleList(
-    (0): Conv2d(32, 64, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1), bias=False)
-    (1): Conv2d(64, 128, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1), bias=False)
+  (proj2): Conv2d(40, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (last_act2): Identity()
+  (down_layers2): ModuleList(
+    (0): Conv2d(40, 80, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1), bias=False)
+    (1): Conv2d(80, 160, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1), bias=False)
   )
-  (branch2_first_conv): Conv2d(1, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (branch2_encoders): ModuleList(
-    (0): Sequential(
-      (0): VSSBlock(
-        (norm): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
-        (op): SS2D(
-          (out_norm): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
-          (in_proj): Linear2d(in_features=32, out_features=32, bias=False)
-          (act): SiLU()
-          (conv2d): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=32, bias=False)
-          (out_act): Identity()
-          (out_proj): Linear2d(in_features=32, out_features=32, bias=False)
-          (dropout): Identity()
-        )
-        (drop_path): timm.DropPath(0)
-        (norm2): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
-        (mlp): gdMlp(
-          (project_in): Conv2d(32, 256, kernel_size=(1, 1), stride=(1, 1))
-          (dwconv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=256)
-          (project_out): Conv2d(128, 32, kernel_size=(1, 1), stride=(1, 1))
-          (act): GELU(approximate='none')
-        )
-      )
-      (1): VSSBlock(
-        (norm): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
-        (op): SS2D(
-          (out_norm): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
-          (in_proj): Linear2d(in_features=32, out_features=32, bias=False)
-          (act): SiLU()
-          (conv2d): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=32, bias=False)
-          (out_act): Identity()
-          (out_proj): Linear2d(in_features=32, out_features=32, bias=False)
-          (dropout): Identity()
-        )
-        (drop_path): timm.DropPath(0)
-        (norm2): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
-        (mlp): gdMlp(
-          (project_in): Conv2d(32, 256, kernel_size=(1, 1), stride=(1, 1))
-          (dwconv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=256)
-          (project_out): Conv2d(128, 32, kernel_size=(1, 1), stride=(1, 1))
-          (act): GELU(approximate='none')
-        )
-      )
-    )
-    (1): Sequential(
-      (0): VSSBlock(
-        (norm): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
-        (op): SS2D(
-          (out_norm): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
-          (in_proj): Linear2d(in_features=64, out_features=64, bias=False)
-          (act): SiLU()
-          (conv2d): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64, bias=False)
-          (out_act): Identity()
-          (out_proj): Linear2d(in_features=64, out_features=64, bias=False)
-          (dropout): Identity()
-        )
-        (drop_path): timm.DropPath(0)
-        (norm2): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
-        (mlp): gdMlp(
-          (project_in): Conv2d(64, 512, kernel_size=(1, 1), stride=(1, 1))
-          (dwconv): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=512)
-          (project_out): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1))
-          (act): GELU(approximate='none')
-        )
-      )
-      (1): VSSBlock(
-        (norm): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
-        (op): SS2D(
-          (out_norm): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
-          (in_proj): Linear2d(in_features=64, out_features=64, bias=False)
-          (act): SiLU()
-          (conv2d): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64, bias=False)
-          (out_act): Identity()
-          (out_proj): Linear2d(in_features=64, out_features=64, bias=False)
-          (dropout): Identity()
-        )
-        (drop_path): timm.DropPath(0)
-        (norm2): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
-        (mlp): gdMlp(
-          (project_in): Conv2d(64, 512, kernel_size=(1, 1), stride=(1, 1))
-          (dwconv): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=512)
-          (project_out): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1))
-          (act): GELU(approximate='none')
-        )
-      )
-    )
+  (drop_path): Identity()
+  (spatial_attention): SpatialAttention(
+    (conv): Conv2d(2, 1, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), bias=False)
+    (sigmoid): Sigmoid()
   )
-  (branch2_bottleneck): Sequential(
-    (0): VSSBlock(
-      (norm): LayerNorm2d((128,), eps=1e-05, elementwise_affine=True)
-      (op): SS2D(
-        (out_norm): LayerNorm2d((128,), eps=1e-05, elementwise_affine=True)
-        (in_proj): Linear2d(in_features=128, out_features=128, bias=False)
-        (act): SiLU()
-        (conv2d): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
-        (out_act): Identity()
-        (out_proj): Linear2d(in_features=128, out_features=128, bias=False)
-        (dropout): Identity()
-      )
-      (drop_path): timm.DropPath(0)
-      (norm2): LayerNorm2d((128,), eps=1e-05, elementwise_affine=True)
-      (mlp): gdMlp(
-        (project_in): Conv2d(128, 1024, kernel_size=(1, 1), stride=(1, 1))
-        (dwconv): Conv2d(1024, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=1024)
-        (project_out): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1))
-        (act): GELU(approximate='none')
-      )
-    )
-    (1): VSSBlock(
-      (norm): LayerNorm2d((128,), eps=1e-05, elementwise_affine=True)
-      (op): SS2D(
-        (out_norm): LayerNorm2d((128,), eps=1e-05, elementwise_affine=True)
-        (in_proj): Linear2d(in_features=128, out_features=128, bias=False)
-        (act): SiLU()
-        (conv2d): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
-        (out_act): Identity()
-        (out_proj): Linear2d(in_features=128, out_features=128, bias=False)
-        (dropout): Identity()
-      )
-      (drop_path): timm.DropPath(0)
-      (norm2): LayerNorm2d((128,), eps=1e-05, elementwise_affine=True)
-      (mlp): gdMlp(
-        (project_in): Conv2d(128, 1024, kernel_size=(1, 1), stride=(1, 1))
-        (dwconv): Conv2d(1024, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=1024)
-        (project_out): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1))
-        (act): GELU(approximate='none')
-      )
-    )
-  )
-  (branch2_decoders): ModuleList(
-    (0): ModuleDict(
-      (up): ConvTranspose2d(128, 64, kernel_size=(2, 2), stride=(2, 2))
-      (fuse): Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
-      (block): Sequential(
-        (0): VSSBlock(
-          (norm): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
-          (op): SS2D(
-            (out_norm): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
-            (in_proj): Linear2d(in_features=64, out_features=64, bias=False)
-            (act): SiLU()
-            (conv2d): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64, bias=False)
-            (out_act): Identity()
-            (out_proj): Linear2d(in_features=64, out_features=64, bias=False)
-            (dropout): Identity()
-          )
-          (drop_path): timm.DropPath(0)
-          (norm2): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
-          (mlp): gdMlp(
-            (project_in): Conv2d(64, 512, kernel_size=(1, 1), stride=(1, 1))
-            (dwconv): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=512)
-            (project_out): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1))
-            (act): GELU(approximate='none')
-          )
-        )
-        (1): VSSBlock(
-          (norm): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
-          (op): SS2D(
-            (out_norm): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
-            (in_proj): Linear2d(in_features=64, out_features=64, bias=False)
-            (act): SiLU()
-            (conv2d): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64, bias=False)
-            (out_act): Identity()
-            (out_proj): Linear2d(in_features=64, out_features=64, bias=False)
-            (dropout): Identity()
-          )
-          (drop_path): timm.DropPath(0)
-          (norm2): LayerNorm2d((64,), eps=1e-05, elementwise_affine=True)
-          (mlp): gdMlp(
-            (project_in): Conv2d(64, 512, kernel_size=(1, 1), stride=(1, 1))
-            (dwconv): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=512)
-            (project_out): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1))
-            (act): GELU(approximate='none')
-          )
-        )
-      )
-    )
-    (1): ModuleDict(
-      (up): ConvTranspose2d(64, 32, kernel_size=(2, 2), stride=(2, 2))
-      (fuse): Conv2d(64, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
-      (block): Sequential(
-        (0): VSSBlock(
-          (norm): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
-          (op): SS2D(
-            (out_norm): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
-            (in_proj): Linear2d(in_features=32, out_features=32, bias=False)
-            (act): SiLU()
-            (conv2d): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=32, bias=False)
-            (out_act): Identity()
-            (out_proj): Linear2d(in_features=32, out_features=32, bias=False)
-            (dropout): Identity()
-          )
-          (drop_path): timm.DropPath(0)
-          (norm2): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
-          (mlp): gdMlp(
-            (project_in): Conv2d(32, 256, kernel_size=(1, 1), stride=(1, 1))
-            (dwconv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=256)
-            (project_out): Conv2d(128, 32, kernel_size=(1, 1), stride=(1, 1))
-            (act): GELU(approximate='none')
-          )
-        )
-        (1): VSSBlock(
-          (norm): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
-          (op): SS2D(
-            (out_norm): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
-            (in_proj): Linear2d(in_features=32, out_features=32, bias=False)
-            (act): SiLU()
-            (conv2d): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=32, bias=False)
-            (out_act): Identity()
-            (out_proj): Linear2d(in_features=32, out_features=32, bias=False)
-            (dropout): Identity()
-          )
-          (drop_path): timm.DropPath(0)
-          (norm2): LayerNorm2d((32,), eps=1e-05, elementwise_affine=True)
-          (mlp): gdMlp(
-            (project_in): Conv2d(32, 256, kernel_size=(1, 1), stride=(1, 1))
-            (dwconv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=256)
-            (project_out): Conv2d(128, 32, kernel_size=(1, 1), stride=(1, 1))
-            (act): GELU(approximate='none')
-          )
-        )
-      )
-    )
-  )
-  (branch2_proj): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (branch2_down_layers): ModuleList(
-    (0): Conv2d(32, 64, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1), bias=False)
-    (1): Conv2d(64, 128, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1), bias=False)
-  )
-  (cross_attention): WindowedCrossAttention(
-    (query): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
-    (key): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
-    (value): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
-    (out): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
-  )
-  (refinement): Sequential(
-    (0): Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-    (1): ReLU(inplace=True)
-    (2): Conv2d(32, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (spatial_attention2): SpatialAttention(
+    (conv): Conv2d(2, 1, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), bias=False)
+    (sigmoid): Sigmoid()
   )
 )
-2024-12-09 12:26:12,326 INFO: Start training from epoch: 0, iter: 0
-2024-12-09 12:26:45,517 INFO: [TwoBr..][epoch:  1, iter:     100, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 0:25:32, time (data): 0.332 (0.009)] l_pix: 1.7714e-01 l_percep: 2.7847e+00 
-2024-12-09 12:27:15,779 INFO: [TwoBr..][epoch:  3, iter:     200, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 0:48:26, time (data): 0.317 (0.010)] l_pix: 1.5601e-01 l_percep: 2.6126e+00 
-2024-12-09 12:27:45,461 INFO: [TwoBr..][epoch:  4, iter:     300, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 0:46:11, time (data): 0.297 (0.006)] l_pix: 1.8012e-01 l_percep: 2.6313e+00 
-2024-12-09 12:28:15,563 INFO: [TwoBr..][epoch:  6, iter:     400, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 0:50:01, time (data): 0.299 (0.008)] l_pix: 1.3157e-01 l_percep: 3.1679e+00 
-2024-12-09 12:28:45,755 INFO: [TwoBr..][epoch:  8, iter:     500, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 0:53:02, time (data): 0.302 (0.010)] l_pix: 9.6151e-02 l_percep: 2.6093e+00 
-2024-12-09 12:29:15,682 INFO: [TwoBr..][epoch:  9, iter:     600, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 0:52:40, time (data): 0.301 (0.008)] l_pix: 1.1570e-01 l_percep: 2.5603e+00 
-2024-12-09 12:29:46,054 INFO: [TwoBr..][epoch: 11, iter:     700, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 0:55:26, time (data): 0.300 (0.006)] l_pix: 1.4719e-01 l_percep: 2.2834e+00 
-2024-12-09 12:30:16,262 INFO: [TwoBr..][epoch: 13, iter:     800, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 0:56:21, time (data): 0.301 (0.008)] l_pix: 8.9570e-02 l_percep: 2.2010e+00 
-2024-12-09 12:30:46,163 INFO: [TwoBr..][epoch: 14, iter:     900, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 0:55:16, time (data): 0.299 (0.007)] l_pix: 1.4894e-01 l_percep: 2.4747e+00 
-2024-12-09 12:31:16,403 INFO: [TwoBr..][epoch: 16, iter:   1,000, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 0:55:59, time (data): 0.301 (0.008)] l_pix: 1.1225e-01 l_percep: 1.9871e+00 
-2024-12-09 12:31:16,404 INFO: Saving models and training states.
-2024-12-09 12:31:21,703 INFO: Validation ValSet,		 # psnr: 17.7884	 # ssim: 0.7003
-2024-12-09 12:31:51,932 INFO: [TwoBr..][epoch: 18, iter:   1,100, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 1:20:25, time (data): 0.302 (0.010)] l_pix: 1.2387e-01 l_percep: 2.3111e+00 
-2024-12-09 12:32:21,813 INFO: [TwoBr..][epoch: 19, iter:   1,200, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 1:17:15, time (data): 0.300 (0.009)] l_pix: 1.0078e-01 l_percep: 2.4978e+00 
-2024-12-09 12:32:52,018 INFO: [TwoBr..][epoch: 21, iter:   1,300, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 1:15:44, time (data): 0.298 (0.007)] l_pix: 1.1027e-01 l_percep: 1.9021e+00 
-2024-12-09 12:33:22,182 INFO: [TwoBr..][epoch: 23, iter:   1,400, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 1:14:14, time (data): 0.300 (0.009)] l_pix: 1.4033e-01 l_percep: 2.0098e+00 
-2024-12-09 12:33:52,114 INFO: [TwoBr..][epoch: 24, iter:   1,500, lr:(2.000e-04,2.000e-04,)] [eta: 1 day, 1:12:05, time (data): 0.300 (0.007)] l_pix: 1.0101e-01 l_percep: 1.9031e+00 
+2024-12-09 19:14:55,937 INFO: Start training from epoch: 0, iter: 0
+2024-12-09 19:15:26,104 INFO: [TwoBr..][epoch:  1, iter:     100, lr:(2.000e-04,2.000e-04,)] [eta: 22:12:20, time (data): 0.302 (0.011)] l_pix: 8.6535e-02 l_percep: 2.7018e+00 
+2024-12-09 19:15:53,552 INFO: [TwoBr..][epoch:  3, iter:     200, lr:(2.000e-04,2.000e-04,)] [eta: 22:31:35, time (data): 0.288 (0.011)] l_pix: 5.7896e-02 l_percep: 2.4282e+00 
+2024-12-09 19:16:20,556 INFO: [TwoBr..][epoch:  4, iter:     300, lr:(2.000e-04,2.000e-04,)] [eta: 22:30:22, time (data): 0.270 (0.007)] l_pix: 5.2922e-02 l_percep: 2.1425e+00 
+2024-12-09 19:16:48,025 INFO: [TwoBr..][epoch:  6, iter:     400, lr:(2.000e-04,2.000e-04,)] [eta: 22:35:20, time (data): 0.272 (0.009)] l_pix: 5.1342e-02 l_percep: 2.3002e+00 
+2024-12-09 19:17:15,431 INFO: [TwoBr..][epoch:  8, iter:     500, lr:(2.000e-04,2.000e-04,)] [eta: 22:37:30, time (data): 0.274 (0.011)] l_pix: 4.4427e-02 l_percep: 2.0145e+00 
+2024-12-09 19:17:42,375 INFO: [TwoBr..][epoch:  9, iter:     600, lr:(2.000e-04,2.000e-04,)] [eta: 22:34:57, time (data): 0.272 (0.009)] l_pix: 5.1973e-02 l_percep: 1.8405e+00 
+2024-12-09 19:18:09,766 INFO: [TwoBr..][epoch: 11, iter:     700, lr:(2.000e-04,2.000e-04,)] [eta: 22:36:12, time (data): 0.270 (0.007)] l_pix: 4.9936e-02 l_percep: 1.7688e+00 
+2024-12-09 19:18:37,219 INFO: [TwoBr..][epoch: 13, iter:     800, lr:(2.000e-04,2.000e-04,)] [eta: 22:37:23, time (data): 0.272 (0.009)] l_pix: 3.9344e-02 l_percep: 1.7252e+00 
+2024-12-09 19:19:04,437 INFO: [TwoBr..][epoch: 14, iter:     900, lr:(2.000e-04,2.000e-04,)] [eta: 22:36:55, time (data): 0.272 (0.007)] l_pix: 5.2477e-02 l_percep: 1.9417e+00 
+2024-12-09 19:19:31,844 INFO: [TwoBr..][epoch: 16, iter:   1,000, lr:(2.000e-04,2.000e-04,)] [eta: 22:37:24, time (data): 0.273 (0.009)] l_pix: 4.7356e-02 l_percep: 1.3189e+00 
+2024-12-09 19:19:31,845 INFO: Saving models and training states.
+2024-12-09 19:19:36,904 INFO: Validation ValSet,		 # psnr: 24.7912	 # ssim: 0.8043
+2024-12-09 19:20:04,571 INFO: [TwoBr..][epoch: 18, iter:   1,100, lr:(2.000e-04,2.000e-04,)] [eta: 23:01:46, time (data): 0.276 (0.011)] l_pix: 4.7913e-02 l_percep: 1.8762e+00 
+2024-12-09 19:20:31,648 INFO: [TwoBr..][epoch: 19, iter:   1,200, lr:(2.000e-04,2.000e-04,)] [eta: 22:58:35, time (data): 0.274 (0.009)] l_pix: 4.1230e-02 l_percep: 1.8562e+00 
+2024-12-09 19:20:59,196 INFO: [TwoBr..][epoch: 21, iter:   1,300, lr:(2.000e-04,2.000e-04,)] [eta: 22:57:36, time (data): 0.271 (0.007)] l_pix: 4.1443e-02 l_percep: 1.3388e+00 
+2024-12-09 19:21:26,725 INFO: [TwoBr..][epoch: 23, iter:   1,400, lr:(2.000e-04,2.000e-04,)] [eta: 22:56:38, time (data): 0.273 (0.009)] l_pix: 3.3985e-02 l_percep: 1.5503e+00 
+2024-12-09 19:21:53,713 INFO: [TwoBr..][epoch: 24, iter:   1,500, lr:(2.000e-04,2.000e-04,)] [eta: 22:53:56, time (data): 0.270 (0.007)] l_pix: 3.3933e-02 l_percep: 1.3781e+00 
+2024-12-09 19:22:21,310 INFO: [TwoBr..][epoch: 26, iter:   1,600, lr:(2.000e-04,2.000e-04,)] [eta: 22:53:25, time (data): 0.273 (0.009)] l_pix: 3.4502e-02 l_percep: 1.3478e+00 
+2024-12-09 19:22:48,738 INFO: [TwoBr..][epoch: 28, iter:   1,700, lr:(2.000e-04,2.000e-04,)] [eta: 22:52:24, time (data): 0.275 (0.011)] l_pix: 3.3228e-02 l_percep: 1.5317e+00 
+2024-12-09 19:23:15,885 INFO: [TwoBr..][epoch: 29, iter:   1,800, lr:(2.000e-04,2.000e-04,)] [eta: 22:50:41, time (data): 0.273 (0.009)] l_pix: 3.8843e-02 l_percep: 1.2000e+00 
+2024-12-09 19:23:43,354 INFO: [TwoBr..][epoch: 31, iter:   1,900, lr:(2.000e-04,2.000e-04,)] [eta: 22:49:56, time (data): 0.271 (0.008)] l_pix: 2.8752e-02 l_percep: 1.2075e+00 
+2024-12-09 19:24:10,795 INFO: [TwoBr..][epoch: 33, iter:   2,000, lr:(2.000e-04,2.000e-04,)] [eta: 22:49:09, time (data): 0.273 (0.010)] l_pix: 2.9461e-02 l_percep: 1.3479e+00 
+2024-12-09 19:24:10,797 INFO: Saving models and training states.
+2024-12-09 19:24:14,627 INFO: Validation ValSet,		 # psnr: 25.9843	 # ssim: 0.8178
+2024-12-09 19:24:41,802 INFO: [TwoBr..][epoch: 34, iter:   2,100, lr:(2.000e-04,2.000e-04,)] [eta: 22:56:49, time (data): 0.271 (0.007)] l_pix: 3.3337e-02 l_percep: 1.3663e+00 
+2024-12-09 19:25:09,397 INFO: [TwoBr..][epoch: 36, iter:   2,200, lr:(2.000e-04,2.000e-04,)] [eta: 22:56:03, time (data): 0.274 (0.009)] l_pix: 2.6340e-02 l_percep: 1.1735e+00 
+2024-12-09 19:25:36,877 INFO: [TwoBr..][epoch: 38, iter:   2,300, lr:(2.000e-04,2.000e-04,)] [eta: 22:55:03, time (data): 0.275 (0.012)] l_pix: 4.1879e-02 l_percep: 1.4647e+00 
+2024-12-09 19:26:03,901 INFO: [TwoBr..][epoch: 39, iter:   2,400, lr:(2.000e-04,2.000e-04,)] [eta: 22:53:10, time (data): 0.273 (0.010)] l_pix: 3.1245e-02 l_percep: 1.1671e+00 
+2024-12-09 19:26:31,346 INFO: [TwoBr..][epoch: 41, iter:   2,500, lr:(2.000e-04,2.000e-04,)] [eta: 22:52:14, time (data): 0.271 (0.008)] l_pix: 3.2566e-02 l_percep: 1.0590e+00 
+2024-12-09 19:26:58,775 INFO: [TwoBr..][epoch: 43, iter:   2,600, lr:(2.000e-04,2.000e-04,)] [eta: 22:51:18, time (data): 0.273 (0.009)] l_pix: 3.9510e-02 l_percep: 1.5302e+00 
+2024-12-09 19:27:25,920 INFO: [TwoBr..][epoch: 44, iter:   2,700, lr:(2.000e-04,2.000e-04,)] [eta: 22:49:53, time (data): 0.271 (0.008)] l_pix: 2.9269e-02 l_percep: 1.1322e+00 
+2024-12-09 19:27:53,330 INFO: [TwoBr..][epoch: 46, iter:   2,800, lr:(2.000e-04,2.000e-04,)] [eta: 22:49:00, time (data): 0.273 (0.010)] l_pix: 4.0361e-02 l_percep: 1.3201e+00 

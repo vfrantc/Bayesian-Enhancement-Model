@@ -1,4 +1,4 @@
-# With single branch I had 28.7 and 0.882
+# # psnr: 27.9652         # ssim: 0.8773
 
 import sys
 import os
@@ -66,28 +66,13 @@ def deconv_up(in_channels):
 
 
 @ARCH_REGISTRY.register()
-class VMUNet(nn.Module):
+class NaiveVMUNetTwoBranch(nn.Module):
     """
-    A simplified VMUNet model with classical U-Net structure, using VSSBlock as the basic building block.
-    No Bayesian layers, no complicated layers, just encoders and decoders with VSSBlock.
-    This class can be instantiated with the same parameters as the original complex model.
+    A two-branch VMUNet model that mirrors the original VMUNet structure twice, and fuses
+    the final outputs from both branches before returning. The signature and returned
+    format remain identical to the single-branch VMUNet, i.e., return [input, output].
 
-    Args:
-        in_channels (int): input channel number
-        out_channels (int): output channel number
-        n_feat (int): channel number of intermediate features
-        stage (int): number of stages (outer loops). Usually 1 for a single forward pass U-Net.
-        num_blocks (list): each element defines the number of VSS blocks in a scale level
-        d_state (int or list): dimension(s) of the hidden state in SSM
-        ssm_ratio (int): expansion ratio of SSM in VSSBlock
-        mlp_ratio (float): expansion ratio of MLP in VSSBlock
-        mlp_type (str): MLP type used in VSSBlock
-        use_pixelshuffle (bool): whether to use pixelshuffle-based up/down sampling.
-                                 If False, uses simple conv down and deconv up.
-        drop_path (float): ratio of drop_path (not used here, but kept for compatibility)
-        use_illu (bool): not used here, just kept for compatibility
-        sam (bool): not used here, no SAM blocks included
-        last_act (str): if not None, apply activation after final projection. (e.g. "relu", "softmax")
+    Args are the same as VMUNet, so it can be plugged in directly.
     """
 
     def __init__(
@@ -107,22 +92,20 @@ class VMUNet(nn.Module):
         sam=False,
         last_act=None,
     ):
-        super(VMUNet, self).__init__()
+        super(NaiveVMUNetTwoBranch, self).__init__()
         self.stage = stage
         self.num_levels = len(num_blocks)
         if isinstance(d_state, int):
             d_state = [d_state]*self.num_levels
-        # Downsample and upsample layers
+
         if use_pixelshuffle:
-            # Pixel shuffle down/up not requested to be simplified, 
-            # but user wants classical structure. Let's just do classical conv/down and deconv/up.
-            # The user said "just classical structure", so let's not complicate with pixelshuffle.
             down_layer = conv_down
             up_layer = deconv_up
         else:
             down_layer = conv_down
             up_layer = deconv_up
 
+        # ===================== Branch 1 ======================
         self.first_conv = nn.Conv2d(in_channels, n_feat, 3, 1, 1, bias=True)
         nn.init.kaiming_normal_(
             self.first_conv.weight, mode="fan_out", nonlinearity="linear"
@@ -130,17 +113,14 @@ class VMUNet(nn.Module):
         if self.first_conv.bias is not None:
             nn.init.zeros_(self.first_conv.bias)
 
-        # Encoder
         self.encoders = nn.ModuleList()
         curr_dim = n_feat
         for i in range(self.num_levels - 1):
             self.encoders.append(self._make_level(curr_dim, num_blocks[i], d_state[i], ssm_ratio, mlp_ratio, mlp_type))
             curr_dim *= 2
 
-        # Bottleneck
         self.bottleneck = self._make_level(curr_dim, num_blocks[-1], d_state[-1], ssm_ratio, mlp_ratio, mlp_type)
 
-        # Decoder
         self.decoders = nn.ModuleList()
         for i in range(self.num_levels - 2, -1, -1):
             self.decoders.append(nn.ModuleDict({
@@ -163,10 +143,50 @@ class VMUNet(nn.Module):
         else:
             raise NotImplementedError
 
-        # For U-Net structure, we need to store intermediate encoder results for skip connections
         self.down_layers = nn.ModuleList([down_layer(n_feat * (2 ** i)) for i in range(self.num_levels - 1)])
 
-        # Drop path is not used here, but we keep the signature
+        # ===================== Branch 2 ======================
+        self.first_conv2 = nn.Conv2d(in_channels, n_feat, 3, 1, 1, bias=True)
+        nn.init.kaiming_normal_(
+            self.first_conv2.weight, mode="fan_out", nonlinearity="linear"
+        )
+        if self.first_conv2.bias is not None:
+            nn.init.zeros_(self.first_conv2.bias)
+
+        self.encoders2 = nn.ModuleList()
+        curr_dim = n_feat
+        for i in range(self.num_levels - 1):
+            self.encoders2.append(self._make_level(curr_dim, num_blocks[i], d_state[i], ssm_ratio, mlp_ratio, mlp_type))
+            curr_dim *= 2
+
+        self.bottleneck2 = self._make_level(curr_dim, num_blocks[-1], d_state[-1], ssm_ratio, mlp_ratio, mlp_type)
+
+        self.decoders2 = nn.ModuleList()
+        curr_dim = n_feat * (2 ** (self.num_levels - 1))
+        for i in range(self.num_levels - 2, -1, -1):
+            self.decoders2.append(nn.ModuleDict({
+                'up': up_layer(curr_dim),
+                'fuse': nn.Conv2d(curr_dim, curr_dim // 2, 1, 1, bias=False),
+                'block': self._make_level(curr_dim // 2, num_blocks[i], d_state[i], ssm_ratio, mlp_ratio, mlp_type)
+            }))
+            curr_dim //= 2
+
+        self.proj2 = nn.Conv2d(n_feat, out_channels, 3, 1, 1, bias=True)
+        if self.proj2.bias is not None:
+            nn.init.zeros_(self.proj2.bias)
+
+        # The second branch shares the same type of final activation
+        if isinstance(self.last_act, nn.Identity):
+            self.last_act2 = nn.Identity()
+        else:
+            # If it's a stateful module, we assume it can be recreated. 
+            # If not, one might directly reuse self.last_act (assuming it's stateless).
+            # For safety, just reuse the same module reference:
+            self.last_act2 = self.last_act
+
+        self.down_layers2 = nn.ModuleList([down_layer(n_feat * (2 ** i)) for i in range(self.num_levels - 1)])
+
+        # Drop path is not used
         self.drop_path = nn.Identity()
 
         self.apply(self._init_weights)
@@ -181,7 +201,6 @@ class VMUNet(nn.Module):
             nn.init.constant_(m.bias, 0)
 
     def _make_level(self, dim, num_block, d_state, ssm_ratio, mlp_ratio, mlp_type):
-        """Create a level of VSSBlocks."""
         layers = []
         for _ in range(num_block):
             layers.append(
@@ -210,36 +229,50 @@ class VMUNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x, mask=None):
-        # We do not use mask or bayesian features here, just a classical forward pass.
-        out_list = [x]
+        # ========== Branch 1 Forward ==========
         fea = self.first_conv(x)
-
-        # Encoding
         skip_connections = []
         curr_feat = fea
         for i in range(self.num_levels - 1):
             curr_feat = self.encoders[i](curr_feat)
             skip_connections.append(curr_feat)
             curr_feat = self.down_layers[i](curr_feat)
-
-        # Bottleneck
         curr_feat = self.bottleneck(curr_feat)
-
-        # Decoding
         for i, dec in enumerate(self.decoders):
             skip = skip_connections[self.num_levels - 2 - i]
             curr_feat = dec['up'](curr_feat)
             curr_feat = dec['fuse'](torch.cat([curr_feat, skip], dim=1))
             curr_feat = dec['block'](curr_feat)
+        out_1 = self.proj(curr_feat)
+        out_1 = self.last_act(out_1)
 
-        out = self.proj(curr_feat)
-        out = self.last_act(out)
-        out_list.append(out)
-        return out_list
+        # ========== Branch 2 Forward ==========
+        fea2 = self.first_conv2(x)
+        skip_connections2 = []
+        curr_feat2 = fea2
+        for i in range(self.num_levels - 1):
+            curr_feat2 = self.encoders2[i](curr_feat2)
+            skip_connections2.append(curr_feat2)
+            curr_feat2 = self.down_layers2[i](curr_feat2)
+        curr_feat2 = self.bottleneck2(curr_feat2)
+        for i, dec2 in enumerate(self.decoders2):
+            skip2 = skip_connections2[self.num_levels - 2 - i]
+            curr_feat2 = dec2['up'](curr_feat2)
+            curr_feat2 = dec2['fuse'](torch.cat([curr_feat2, skip2], dim=1))
+            curr_feat2 = dec2['block'](curr_feat2)
+        out_2 = self.proj2(curr_feat2)
+        out_2 = self.last_act2(out_2)
+
+        # ========== Fusion of Outputs ==========
+        # We fuse the two outputs by averaging them, returning the same format: [input, fused_output]
+        fused_out = (out_1 + out_2) / 2.0
+
+        # Return same format as original: [x, out]
+        return [x, fused_out]
 
 
 def build_model():
-    return VMUNet(
+    return VMUNetTwoBranch(
         stage=1,
         n_feat=40,
         num_blocks=[2, 2, 2],
