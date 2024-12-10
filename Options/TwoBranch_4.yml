@@ -1,5 +1,5 @@
 # general settings
-name: TwoBranch_4
+name: FusedTwoBranch_4
 model_type: ImageEnhancer
 scale: 1
 num_gpu: 1  # set num_gpu: 0 for cpu mode
@@ -52,7 +52,7 @@ datasets:
 
 # network structures
 network_g:
-  type: TunedModel
+  type: FusedTunedModel
   in_channels: 6
   out_channels: 3
   n_feat: 40
@@ -64,7 +64,7 @@ network_g:
   drop_path: 0.
   sam: false
   stage: 1
-  num_blocks: [3,3,3]
+  num_blocks: [2,2,2]
 
 # path
 path:

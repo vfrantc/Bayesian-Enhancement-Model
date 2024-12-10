@@ -1,78 +1,3 @@
-# The main ideas are:
-
-# Cross-Level Fusion: After each encoder stage, exchange information between the two branches. 
-# This helps each branch learn complementary features. To avoid simply adding noise, consider 
-# a learned gating or attention mechanism on the transferred features.
-
-# Channel Attention (Squeeze-and-Excitation): Insert an SE-block (or similar channel attention block) 
-# in the bottleneck or decoder stages to help the network emphasize the most informative channels.
-
-#Spatial Attention: Use a spatial attention mechanism (like a simple convolution-based attention) 
-# to focus on important spatial regions. This can help bring out finer details and improve PSNR and SSIM.
-
-# Add fusion for branches:
-# fusion = nn.Sequential(
-#     nn.Conv2d(out_channels * 2, out_channels, 3, 1, 1, bias=True),
-#     nn.ReLU(inplace=True),
-#     nn.Conv2d(out_channels, out_channels, 3, 1, 1, bias=True)
-# )
-# fused_out = fusion(torch.cat([out_1, out_2], dim=1))
-
-# Your modified __init__ might have something like this:
-
-# python
-# Copy code
-# def __init__(...):
-#     super(VMUNetTwoBranch, self).__init__()
-#     # ... existing code ...
-    
-#     # Cross-fusion layers for each encoder stage
-#     self.cross_fusion_layers_12 = nn.ModuleList([CrossFusionBlock(n_feat*(2**i)) for i in range(self.num_levels - 1)])
-#     self.cross_fusion_layers_21 = nn.ModuleList([CrossFusionBlock(n_feat*(2**i)) for i in range(self.num_levels - 1)])
-    
-#     # SE block for bottleneck
-#     bottleneck_dim = n_feat * (2 ** (self.num_levels - 1))
-#     self.bottleneck_se = SEBlock(bottleneck_dim)
-#     self.bottleneck_se2 = SEBlock(bottleneck_dim)
-
-#     # Spatial attention after bottleneck
-#     self.spatial_attention = SpatialAttention()
-#     self.spatial_attention2 = SpatialAttention()
-
-#     # ... rest of existing code ...
-# And in the forward method, after each encoder stage, fuse the features:
-
-# python
-# Copy code
-# for i in range(self.num_levels - 1):
-#     curr_feat = self.encoders[i](curr_feat)
-#     curr_feat2 = self.encoders2[i](curr_feat2)
-    
-#     # Cross-level fusion
-#     curr_feat2 = self.cross_fusion_layers_12[i](curr_feat, curr_feat2)
-#     curr_feat = self.cross_fusion_layers_21[i](curr_feat2, curr_feat)
-    
-#     skip_connections.append(curr_feat)
-#     skip_connections2.append(curr_feat2)
-    
-#     curr_feat = self.down_layers[i](curr_feat)
-#     curr_feat2 = self.down_layers2[i](curr_feat2)
-
-# # Bottleneck with attention
-# curr_feat = self.bottleneck(curr_feat)
-# curr_feat = self.bottleneck_se(curr_feat)
-# curr_feat = self.spatial_attention(curr_feat)
-
-# curr_feat2 = self.bottleneck2(curr_feat2)
-# curr_feat2 = self.bottleneck_se2(curr_feat2)
-# curr_feat2 = self.spatial_attention2(curr_feat2)
-# Then continue with the decoder as before. The fused features and added attentions may improve representational power and could help you close the gap towards the state-of-the-art results.
-
-
-# Naive 40 channels, ssm: 1, ratio: 4 No attention, no cross-level fusion    # psnr: 28.7629	 # ssim: 0.8816
-
-
-
 import sys
 import os
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -91,10 +16,7 @@ except:
     from vmamba.models.vmamba import VSSBlock, LayerNorm2d
 from functools import partial
 
-
-def _no_grad_trunc_normal_(
-    tensor, mean, std, a, b
-):
+def _no_grad_trunc_normal_(tensor, mean, std, a, b):
     def norm_cdf(x):
         return (1.0 + math.erf(x / math.sqrt(2.0))) / 2.0
 
@@ -116,16 +38,11 @@ def _no_grad_trunc_normal_(
 
         return tensor
 
-
-def trunc_normal_(
-    tensor, mean=0.0, std=1.0, a=-2.0, b=2.0
-):
+def trunc_normal_(tensor, mean=0.0, std=1.0, a=-2.0, b=2.0):
     return _no_grad_trunc_normal_(tensor, mean, std, a, b)
-
 
 def conv_down(in_channels):
     return nn.Conv2d(in_channels, in_channels * 2, 4, 2, 1, bias=False)
-
 
 def deconv_up(in_channels):
     return nn.ConvTranspose2d(
@@ -137,18 +54,14 @@ def deconv_up(in_channels):
         output_padding=0,
     )
 
-
 class CrossFusionBlock(nn.Module):
     def __init__(self, in_channels):
         super(CrossFusionBlock, self).__init__()
         self.transform = nn.Conv2d(in_channels, in_channels, kernel_size=1, bias=True)
-        # A simple learned scalar gate to control how much info to fuse
         self.gate = nn.Parameter(torch.ones(1, in_channels, 1, 1))
-        
+
     def forward(self, x_src, x_tgt):
-        # x_src: features from source branch
-        # x_tgt: features from target branch
-        # Transform and then add
+        # fused: x_tgt + gate * transform(x_src)
         fused = x_tgt + self.gate * self.transform(x_src)
         return fused
 
@@ -185,15 +98,10 @@ class SpatialAttention(nn.Module):
         x_attn = self.conv(x_attn)
         return x * self.sigmoid(x_attn)
 
-
 @ARCH_REGISTRY.register()
-class TunedModel(nn.Module):
+class FusedTunedModel(nn.Module):
     """
-    A two-branch VMUNet model that mirrors the original VMUNet structure twice, and fuses
-    the final outputs from both branches before returning. The signature and returned
-    format remain identical to the single-branch VMUNet, i.e., return [input, output].
-
-    Args are the same as VMUNet, so it can be plugged in directly.
+    A two-branch VMUNet model with a single cross-level fusion at the deepest encoder stage.
     """
 
     def __init__(
@@ -213,7 +121,7 @@ class TunedModel(nn.Module):
         sam=False,
         last_act=None,
     ):
-        super(TunedModel, self).__init__()
+        super(FusedTunedModel, self).__init__()
         self.stage = stage
         self.num_levels = len(num_blocks)
         if isinstance(d_state, int):
@@ -237,7 +145,9 @@ class TunedModel(nn.Module):
         self.encoders = nn.ModuleList()
         curr_dim = n_feat
         for i in range(self.num_levels - 1):
-            self.encoders.append(self._make_level(curr_dim, num_blocks[i], d_state[i], ssm_ratio, mlp_ratio, mlp_type))
+            self.encoders.append(
+                self._make_level(curr_dim, num_blocks[i], d_state[i], ssm_ratio, mlp_ratio, mlp_type)
+            )
             curr_dim *= 2
 
         self.bottleneck = self._make_level(curr_dim, num_blocks[-1], d_state[-1], ssm_ratio, mlp_ratio, mlp_type)
@@ -277,7 +187,9 @@ class TunedModel(nn.Module):
         self.encoders2 = nn.ModuleList()
         curr_dim = n_feat
         for i in range(self.num_levels - 1):
-            self.encoders2.append(self._make_level(curr_dim, num_blocks[i], d_state[i], ssm_ratio, mlp_ratio, mlp_type))
+            self.encoders2.append(
+                self._make_level(curr_dim, num_blocks[i], d_state[i], ssm_ratio, mlp_ratio, mlp_type)
+            )
             curr_dim *= 2
 
         self.bottleneck2 = self._make_level(curr_dim, num_blocks[-1], d_state[-1], ssm_ratio, mlp_ratio, mlp_type)
@@ -296,32 +208,34 @@ class TunedModel(nn.Module):
         if self.proj2.bias is not None:
             nn.init.zeros_(self.proj2.bias)
 
-        # The second branch shares the same type of final activation
+        # Same final activation for branch 2
         if isinstance(self.last_act, nn.Identity):
             self.last_act2 = nn.Identity()
         else:
-            # If it's a stateful module, we assume it can be recreated. 
-            # If not, one might directly reuse self.last_act (assuming it's stateless).
-            # For safety, just reuse the same module reference:
             self.last_act2 = self.last_act
 
         self.down_layers2 = nn.ModuleList([down_layer(n_feat * (2 ** i)) for i in range(self.num_levels - 1)])
 
-        # Drop path is not used
+        # Drop path not used
         self.drop_path = nn.Identity()
+
+        # Define a single cross-fusion at the deepest level
+        bottleneck_dim = n_feat * (2 ** (self.num_levels - 1))
+        self.cross_fusion_12 = CrossFusionBlock(bottleneck_dim)
+        self.cross_fusion_21 = CrossFusionBlock(bottleneck_dim)
+
+        # SE block and spatial attention
+        self.bottleneck_se = SEBlock(bottleneck_dim)
+        self.bottleneck_se2 = SEBlock(bottleneck_dim)
 
         self.spatial_attention = SpatialAttention()
         self.spatial_attention2 = SpatialAttention()
+
         self.fusion = nn.Sequential(
             nn.Conv2d(out_channels * 2, out_channels, 3, 1, 1, bias=True),
             nn.ReLU(inplace=True),
             nn.Conv2d(out_channels, out_channels, 3, 1, 1, bias=True)
         )
-
-        # SE block for bottleneck
-        bottleneck_dim = n_feat * (2 ** (self.num_levels - 1))
-        self.bottleneck_se = SEBlock(bottleneck_dim)
-        self.bottleneck_se2 = SEBlock(bottleneck_dim)
 
         self.apply(self._init_weights)
 
@@ -363,7 +277,7 @@ class TunedModel(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x, mask=None):
-        # ========== Branch 1 Forward ==========
+        # ===== Branch 1 encoder =====
         fea = self.first_conv(x)
         skip_connections = []
         curr_feat = fea
@@ -371,9 +285,30 @@ class TunedModel(nn.Module):
             curr_feat = self.encoders[i](curr_feat)
             skip_connections.append(curr_feat)
             curr_feat = self.down_layers[i](curr_feat)
+
+        # ===== Branch 2 encoder =====
+        fea2 = self.first_conv2(x)
+        skip_connections2 = []
+        curr_feat2 = fea2
+        for i in range(self.num_levels - 1):
+            curr_feat2 = self.encoders2[i](curr_feat2)
+            skip_connections2.append(curr_feat2)
+            curr_feat2 = self.down_layers2[i](curr_feat2)
+
+        # ===== Single cross-level fusion at the deepest level =====
+        curr_feat2 = self.cross_fusion_12(curr_feat, curr_feat2)
+        curr_feat = self.cross_fusion_21(curr_feat2, curr_feat)
+
+        # ===== Bottleneck and attention =====
         curr_feat = self.bottleneck(curr_feat)
         curr_feat = self.bottleneck_se(curr_feat)
         curr_feat = self.spatial_attention(curr_feat)
+
+        curr_feat2 = self.bottleneck2(curr_feat2)
+        curr_feat2 = self.bottleneck_se2(curr_feat2)
+        curr_feat2 = self.spatial_attention2(curr_feat2)
+
+        # ===== Branch 1 decoder =====
         for i, dec in enumerate(self.decoders):
             skip = skip_connections[self.num_levels - 2 - i]
             curr_feat = dec['up'](curr_feat)
@@ -382,17 +317,7 @@ class TunedModel(nn.Module):
         out_1 = self.proj(curr_feat)
         out_1 = self.last_act(out_1)
 
-        # ========== Branch 2 Forward ==========
-        fea2 = self.first_conv2(x)
-        skip_connections2 = []
-        curr_feat2 = fea2
-        for i in range(self.num_levels - 1):
-            curr_feat2 = self.encoders2[i](curr_feat2)
-            skip_connections2.append(curr_feat2)
-            curr_feat2 = self.down_layers2[i](curr_feat2)
-        curr_feat2 = self.bottleneck2(curr_feat2)
-        curr_feat2 = self.bottleneck_se2(curr_feat2)
-        curr_feat2 = self.spatial_attention2(curr_feat2)
+        # ===== Branch 2 decoder =====
         for i, dec2 in enumerate(self.decoders2):
             skip2 = skip_connections2[self.num_levels - 2 - i]
             curr_feat2 = dec2['up'](curr_feat2)
@@ -401,16 +326,14 @@ class TunedModel(nn.Module):
         out_2 = self.proj2(curr_feat2)
         out_2 = self.last_act2(out_2)
 
-        # ========== Fusion of Outputs ==========
-        # We fuse the two outputs by averaging them, returning the same format: [input, fused_output]
+        # ===== Final fusion of two branch outputs =====
         fused_out = self.fusion(torch.cat([out_1, out_2], dim=1))
 
-        # Return same format as original: [x, out]
         return [x, fused_out]
 
 
 def build_model():
-    return TunedModel(
+    return FusedTunedModel(
         stage=1,
         n_feat=40,
         num_blocks=[2, 2, 2],

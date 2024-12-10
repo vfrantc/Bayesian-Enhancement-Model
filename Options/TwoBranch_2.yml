@@ -58,7 +58,7 @@ network_g:
   n_feat: 40
   d_state: [1,1,1]
   ssm_ratio: 1
-  mlp_ratio: 2
+  mlp_ratio: 4
   mlp_type: gdmlp
   use_pixelshuffle: true
   drop_path: 0.
