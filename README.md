@@ -1,3 +1,109 @@
+# Quaternion Retinex Decomposition
+
+## Dependencies and Installation
+
+- Python 3.10.12
+- Pytorch 1.13.1
+
+#### Create Conda Environment
+
+```bash
+conda create -n QD python=3.10.12
+conda activate QD
+```
+
+#### Clone Repo
+
+```bash
+git clone git@github.com:vfrantc/QD.git
+```
+
+#### Install Dependencies
+
+```bash
+cd QD
+pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117
+
+pip install -r requirements.txt
+```
+
+#### Install 2D Selective Scan
+```bash
+cd kernels/selective_scan && pip install .
+```
+
+
+### 2. Prepare Datasets
+Default model is trained on the LOLv1 dataset
+
+Download the LOLv1 and LOLv2 datasets:
+
+LOLv1 - [Google Drive](https://drive.google.com/file/d/1vhJg75hIpYvsmryyaxdygAWeHuiY_HWu/view?usp=sharing)
+
+
+
+LOLv2 - [Google Drive](https://drive.google.com/file/d/1OMfP6Ks2QKJcru1wS2eP629PgvKqF2Tw/view?usp=sharing)
+
+```
+pip install gdown
+gdown 1vhJg75hIpYvsmryyaxdygAWeHuiY_HWu
+gdown 1OMfP6Ks2QKJcru1wS2eP629PgvKqF2Tw
+unzip LOLv1.zip
+unzip LOLv2.zip
+rm -rf LOLv1.zip LOLv2.zip
+mv LOLv1 data
+mv LOLv2 data
+```
+
+**Note:** Under the main directory, create a folder called ```data``` and place the dataset folders inside it.
+<details>
+  <summary>
+  <b>Datasets should be organized as follows:</b>
+  </summary>
+
+  ```
+    |--data   
+    |    |--LOLv1
+    |    |    |--Train
+    |    |    |    |--input
+    |    |    |    |     ...
+    |    |    |    |--target
+    |    |    |    |     ...
+    |    |    |--Test
+    |    |    |    |--input
+    |    |    |    |     ...
+    |    |    |    |--target
+    |    |    |    |     ...
+    |    |--LOLv2
+    |    |    |--Real_captured
+    |    |    |    |--Train
+    |    |    |    |    |--Low
+    |    |    |    |    |     ...
+    |    |    |    |    |--Normal
+    |    |    |    |    |     ...
+    |    |    |    |--Test
+    |    |    |    |    |--Low
+    |    |    |    |    |     ...
+    |    |    |    |    |--Normal
+    |    |    |    |    |     ...
+    |    |    |--Synthetic
+    |    |    |    |--Train
+    |    |    |    |    |--Low
+    |    |    |    |    |    ...
+    |    |    |    |    |--Normal
+    |    |    |    |    |    ...
+    |    |    |    |--Test
+    |    |    |    |    |--Low
+    |    |    |    |    |    ...
+    |    |    |    |    |--Normal
+    |    |    |    |    |    ...
+  ```
+
+</details>
+
+### 3. Use (give details on how to use the model)
+
+
 # Bayesian Enhancement Model
 
 This is the official code for the paper [Bayesian Enhancement Models for One-to-Many Mapping in Image Enhancement](https://openreview.net/pdf?id=jJJOoLVAEm)
