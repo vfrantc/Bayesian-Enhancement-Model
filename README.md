@@ -105,7 +105,7 @@ mv LOLv2 data
 
 ```bash
 cd basicsr/QD/
-nohup python train.py \
+nohup python train2.py \
     --model_type model1 \
     --gpu 0 \
     --train_input_dir ../../data/LOLv1/Train/input \
@@ -114,7 +114,7 @@ nohup python train.py \
     --test_gt_dir ../../data/LOLv1/Test/target \
     > train_model1.log 2>&1 &
 
-nohup python train.py \
+nohup python train2.py \
   --model_type model2 \
   --gpu 1 \
   --train_input_dir ../../data/LOLv1/Train/input \
@@ -123,7 +123,7 @@ nohup python train.py \
   --test_gt_dir ../../data/LOLv1/Test/target \
   > train_model2.log 2>&1 &
 
-nohup python train.py \
+nohup python train2.py \
     --model_type model3 \
     --gpu 2 \
     --train_input_dir ../../data/LOLv1/Train/input \
@@ -132,7 +132,7 @@ nohup python train.py \
     --test_gt_dir ../../data/LOLv1/Test/target \
     > train_model3.log 2>&1 &
 
-nohup python train.py \
+nohup python train2.py \
     --model_type model4 \
     --gpu 3 \
     --train_input_dir ../../data/LOLv1/Train/input \
