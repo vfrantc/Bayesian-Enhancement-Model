@@ -1,0 +1,209 @@
+nohup: ignoring input
+Cannot import dcn. Ignore this warning if dcn is not used. Otherwise install BasicSR with compiling dcn.
+Cannot import selective_scan_cuda. This affects speed.
+Disable distributed.
+2024-12-11 20:59:23,758 INFO: 
+                ____                _       _____  ____
+               / __ ) ____ _ _____ (_)_____/ ___/ / __ \
+              / __  |/ __ `// ___// // ___/\__ \ / /_/ /
+             / /_/ // /_/ /(__  )/ // /__ ___/ // _, _/
+            /_____/ \__,_//____//_/ \___//____//_/ |_|
+     ______                   __   __                 __      __
+    / ____/____   ____   ____/ /  / /   __  __ _____ / /__   / /
+   / / __ / __ \ / __ \ / __  /  / /   / / / // ___// //_/  / /
+  / /_/ // /_/ // /_/ // /_/ /  / /___/ /_/ // /__ / /<    /_/
+  \____/ \____/ \____/ \____/  /_____/\____/ \___//_/|_|  (_)
+    
+Version Information: 
+	BasicSR: 1.2.0+0a574a2
+	PyTorch: 1.13.1+cu117
+	TorchVision: 0.14.1+cu117
+2024-12-11 20:59:23,759 INFO: 
+  name: DecompDualBranch_1
+  model_type: ImageEnhancer
+  scale: 1
+  num_gpu: 1
+  manual_seed: 100
+  condition:[
+    type: mean
+    scale_down: 16
+    noise_level: 0.1
+  ]
+  datasets:[
+    train:[
+      name: TrainSet
+      type: Dataset_PairedImage_Mask
+      dataroot_gt: ./data/LOLv1/Train/target
+      dataroot_lq: ./data/LOLv1/Train/input
+      geometric_augs: True
+      condition:[
+        type: mean
+        scale_down: 16
+        noise_level: 0.1
+      ]
+      mim:[
+        mask_ratio: 0.75
+        mask_patch_size: 1
+        model_patch_size: 1
+      ]
+      filename_tmpl: {}
+      io_backend:[
+        type: disk
+      ]
+      use_shuffle: True
+      num_worker_per_gpu: 8
+      batch_size_per_gpu: 8
+      mini_batch_sizes: [8]
+      iters: [300000]
+      gt_size: 128
+      gt_sizes: [128]
+      dataset_enlarge_ratio: 1
+      prefetch_mode: None
+      phase: train
+      scale: 1
+    ]
+    val:[
+      name: ValSet
+      type: Dataset_PairedImage_Mask
+      dataroot_gt: ./data/LOLv1/Test/target
+      dataroot_lq: ./data/LOLv1/Test/input
+      condition:[
+        type: mean
+        scale_down: 16
+        noise_level: 0.1
+      ]
+      io_backend:[
+        type: disk
+      ]
+      phase: val
+      scale: 1
+    ]
+  ]
+  network_g:[
+    type: DecompDualBranch
+    in_channels: 6
+    out_channels: 3
+    n_feat: 40
+    d_state: [1, 1, 1]
+    ssm_ratio: 1
+    mlp_ratio: 4
+    mlp_type: gdmlp
+    use_pixelshuffle: True
+    drop_path: 0.0
+    sam: False
+    stage: 1
+    num_blocks: [2, 2, 2]
+    decomp_model: model1
+  ]
+  path:[
+    pretrain_network_g: None
+    strict_load_g: True
+    resume_state: None
+    experiments_root: /home/vladimirfrants9/Bayesian-Enhancement-Model/experiments/DecompDualBranch_1
+    models: /home/vladimirfrants9/Bayesian-Enhancement-Model/experiments/DecompDualBranch_1/models
+    training_states: /home/vladimirfrants9/Bayesian-Enhancement-Model/experiments/DecompDualBranch_1/training_states
+    log: /home/vladimirfrants9/Bayesian-Enhancement-Model/experiments/DecompDualBranch_1
+    visualization: /home/vladimirfrants9/Bayesian-Enhancement-Model/experiments/DecompDualBranch_1/visualization
+  ]
+  train:[
+    total_iter: 300000
+    warmup_iter: -1
+    max_grad_norm: 1
+    scheduler:[
+      type: CosineAnnealingRestartCyclicLR
+      periods: [150000, 46000, 104000]
+      restart_weights: [1, 1, 1]
+      eta_mins: [0.0002, 0.0002, 1e-06]
+    ]
+    optim_g:[
+      type: AdamW
+      lr: 0.0002
+      weight_decay: 0.0001
+      betas: [0.9, 0.999]
+    ]
+    mixing_augs:[
+      mixup: False
+    ]
+    pixel_opt:[
+      type: L1Loss
+      loss_weight: 1
+      reduction: mean
+    ]
+    perceptual_opt:[
+      type: PerceptualLoss
+      layer_weights:[
+        conv5_4: 1
+      ]
+      vgg_type: vgg19
+      use_input_norm: True
+      range_norm: False
+      perceptual_weight: 0.01
+      style_weight: 0
+      criterion: l1
+    ]
+  ]
+  val:[
+    window_size: 16
+    val_freq: 1000.0
+    save_img: True
+    rgb2bgr: True
+    use_image: True
+    max_minibatch: 8
+    metrics:[
+      psnr:[
+        type: calculate_psnr
+        crop_border: 0
+        test_y_channel: False
+      ]
+      ssim:[
+        type: calculate_ssim
+        crop_border: 0
+        test_y_channel: False
+      ]
+    ]
+  ]
+  logger:[
+    print_freq: 100
+    save_checkpoint_freq: 1000.0
+    use_tb_logger: True
+    record_grad: False
+    wandb:[
+      project: underwater
+      resume_id: None
+    ]
+  ]
+  dist_params:[
+    backend: nccl
+    port: 29500
+  ]
+  dist: False
+  rank: 0
+  world_size: 1
+  auto_resume: False
+  is_train: True
+  root_path: /home/vladimirfrants9/Bayesian-Enhancement-Model
+
+Traceback (most recent call last):
+  File "/home/vladimirfrants9/Bayesian-Enhancement-Model/basicsr/train.py", line 267, in <module>
+    train_pipeline(root_path)
+  File "/home/vladimirfrants9/Bayesian-Enhancement-Model/basicsr/train.py", line 123, in train_pipeline
+    tb_logger = init_tb_loggers(opt)
+  File "/home/vladimirfrants9/Bayesian-Enhancement-Model/basicsr/train.py", line 27, in init_tb_loggers
+    init_wandb_logger(opt)
+  File "/home/vladimirfrants9/Bayesian-Enhancement-Model/basicsr/utils/dist_util.py", line 80, in wrapper
+    return func(*args, **kwargs)
+  File "/home/vladimirfrants9/Bayesian-Enhancement-Model/basicsr/utils/logger.py", line 141, in init_wandb_logger
+    wandb.init(id=wandb_id, resume=resume, name=opt['name'], config=opt, project=project, sync_tensorboard=True)
+  File "/opt/conda/envs/BEM/lib/python3.10/site-packages/wandb/sdk/wandb_init.py", line 1319, in init
+    wandb._sentry.reraise(e)
+  File "/opt/conda/envs/BEM/lib/python3.10/site-packages/wandb/analytics/sentry.py", line 156, in reraise
+    raise exc.with_traceback(sys.exc_info()[2])
+  File "/opt/conda/envs/BEM/lib/python3.10/site-packages/wandb/sdk/wandb_init.py", line 1297, in init
+    wi.setup(
+  File "/opt/conda/envs/BEM/lib/python3.10/site-packages/wandb/sdk/wandb_init.py", line 289, in setup
+    wandb_login._login(
+  File "/opt/conda/envs/BEM/lib/python3.10/site-packages/wandb/sdk/wandb_login.py", line 337, in _login
+    wlogin.prompt_api_key()
+  File "/opt/conda/envs/BEM/lib/python3.10/site-packages/wandb/sdk/wandb_login.py", line 271, in prompt_api_key
+    raise UsageError("api_key not configured (no-tty). call " + directive)
+wandb.errors.errors.UsageError: api_key not configured (no-tty). call wandb.login(key=[your_api_key])

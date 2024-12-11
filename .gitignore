@@ -7,3 +7,7 @@ basicsr/QD/__pycache__
 basicsr/QD/checkpoints
 basicsr/QD/evaluation_results
 basicsr/QD/runs
+.eggs/
+basicsr.egg-info/
+kernels/selective_scan/build/
+kernels/selective_scan/selective_scan.egg-info/

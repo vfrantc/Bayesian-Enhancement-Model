@@ -202,7 +202,7 @@ class Decomp(nn.Module):
         with torch.no_grad():
             laplacian = torch.tensor([[[0, -1, 0],
                                        [-1, 4, -1],
-                                       [0, -1, 0]]]], dtype=torch.float)
+                                       [0, -1, 0]]], dtype=torch.float)
             laplacian = laplacian.expand(out_channels, out_channels, 3, 3) / out_channels
             self.sharpening.weight.copy_(laplacian)
 

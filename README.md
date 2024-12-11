@@ -101,8 +101,58 @@ mv LOLv2 data
 
 </details>
 
-### 3. Use (give details on how to use the model)
+### 3. Train the decomposition models
 
+```bash
+cd basicsr/QD/
+nohup python train.py \
+    --model_type model1 \
+    --gpu 0 \
+    --train_input_dir ../../data/LOLv1/Train/input \
+    --train_gt_dir ../../data/LOLv1/Train/target \
+    --test_input_dir ../../data/LOLv1/Test/input \
+    --test_gt_dir ../../data/LOLv1/Test/target \
+    > train_model1.log 2>&1 &
+
+nohup python train.py \
+  --model_type model2 \
+  --gpu 1 \
+  --train_input_dir ../../data/LOLv1/Train/input \
+  --train_gt_dir ../../data/LOLv1/Train/target \
+  --test_input_dir ../../data/LOLv1/Test/input \
+  --test_gt_dir ../../data/LOLv1/Test/target \
+  > train_model2.log 2>&1 &
+
+nohup python train.py \
+    --model_type model3 \
+    --gpu 2 \
+    --train_input_dir ../../data/LOLv1/Train/input \
+    --train_gt_dir ../../data/LOLv1/Train/target \
+    --test_input_dir ../../data/LOLv1/Test/input \
+    --test_gt_dir ../../data/LOLv1/Test/target \
+    > train_model3.log 2>&1 &
+
+nohup python train.py \
+    --model_type model4 \
+    --gpu 3 \
+    --train_input_dir ../../data/LOLv1/Train/input \
+    --train_gt_dir ../../data/LOLv1/Train/target \
+    --test_input_dir ../../data/LOLv1/Test/input \
+    --test_gt_dir ../../data/LOLv1/Test/target \
+    > train_model4.log 2>&1 &
+```
+
+### 4. Use (give details on how to use the model)
+
+
+### 5. Train the LOL enchancement
+
+```bash
+CUDA_VISIBLE_DEVICES=0 nohup python3 basicsr/train.py --opt Options/DecompDualBranch_1.yml > log_DecompDualBranch_1.out 2>&1 &
+CUDA_VISIBLE_DEVICES=1 nohup python3 basicsr/train.py --opt Options/DecompDualBranch_2.yml > log_DecompDualBranch_2.out 2>&1 &
+CUDA_VISIBLE_DEVICES=2 nohup python3 basicsr/train.py --opt Options/DecompDualBranch_3.yml > log_DecompDualBranch_3.out 2>&1 &
+CUDA_VISIBLE_DEVICES=3 nohup python3 basicsr/train.py --opt Options/DecompDualBranch_4.yml > log_DecompDualBranch_4.out 2>&1 &
+```
 
 # Bayesian Enhancement Model
 
