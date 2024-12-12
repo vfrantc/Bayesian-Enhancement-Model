@@ -4,7 +4,6 @@ experiments/
 tb_logger/
 wandb/
 basicsr/QD/__pycache__
-basicsr/QD/checkpoints
 basicsr/QD/evaluation_results
 basicsr/QD/runs
 .eggs/
