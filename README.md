@@ -153,10 +153,10 @@ CUDA_VISIBLE_DEVICES=1 nohup python3 basicsr/train.py --opt Options/DecompDualBr
 CUDA_VISIBLE_DEVICES=2 nohup python3 basicsr/train.py --opt Options/DecompSingleBranch_1.yml > log_DecompSingleBranch_1.out 2>&1 &
 CUDA_VISIBLE_DEVICES=3 nohup python3 basicsr/train.py --opt Options/DecompSingleBranch_4.yml > log_DecompSingleBranch_4.out 2>&1 &
 
-CUDA_VISIBLE_DEVICES=0 nohup python3 basicsr/train.py --opt Options/DecompDualBranch2DD_1.yml > log_DecompDualBranch2DD_1.out 2>&1 &
-CUDA_VISIBLE_DEVICES=1 nohup python3 basicsr/train.py --opt Options/DecompDualBranch2DD_4.yml > log_DecompDualBranch2DD_4.out 2>&1 &
-CUDA_VISIBLE_DEVICES=2 nohup python3 basicsr/train.py --opt Options/DecompSingleBranchDD_1.yml > log_DecompSingleBranchDD_1.out 2>&1 &
-CUDA_VISIBLE_DEVICES=3 nohup python3 basicsr/train.py --opt Options/DecompSingleBranchDD_4.yml > log_DecompSingleBranchDD_4.out 2>&1 &
+CUDA_VISIBLE_DEVICES=4 nohup python3 basicsr/train.py --opt Options/DecompDualBranch2DD_1.yml > log_DecompDualBranch2DD_1.out 2>&1 &
+CUDA_VISIBLE_DEVICES=5 nohup python3 basicsr/train.py --opt Options/DecompDualBranch2DD_4.yml > log_DecompDualBranch2DD_4.out 2>&1 &
+CUDA_VISIBLE_DEVICES=6 nohup python3 basicsr/train.py --opt Options/DecompSingleBranchDD_1.yml > log_DecompSingleBranchDD_1.out 2>&1 &
+CUDA_VISIBLE_DEVICES=7 nohup python3 basicsr/train.py --opt Options/DecompSingleBranchDD_4.yml > log_DecompSingleBranchDD_4.out 2>&1 &
 ```
 
 # Bayesian Enhancement Model

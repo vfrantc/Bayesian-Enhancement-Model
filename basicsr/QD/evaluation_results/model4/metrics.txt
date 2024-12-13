@@ -1,0 +1,4 @@
+Average PSNR: 62.5150 dB
+Average SSIM: 0.9998
+Average LPIPS: 0.0001
+Average RCI: 0.9875
