@@ -1,5 +1,5 @@
 # general settings
-name: DecompDualBranch2DD_1
+name: DecompDualBranch2DDWavelet_1
 model_type: ImageEnhancer
 scale: 1
 num_gpu: 1  # set num_gpu: 0 for cpu mode
@@ -52,7 +52,7 @@ datasets:
 
 # network structures
 network_g:
-  type: DecompDualBranch2DD
+  type: DecompDualBranch2DDWavelet
   in_channels: 6
   out_channels: 3
   n_feat: 40
@@ -65,7 +65,7 @@ network_g:
   sam: false
   stage: 1
   num_blocks: [2,2,2]
-  decomp_model: model4
+  decomp_model: model1
 
 # path
 path:

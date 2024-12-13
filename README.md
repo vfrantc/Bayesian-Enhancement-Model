@@ -51,6 +51,7 @@ gdown 1OMfP6Ks2QKJcru1wS2eP629PgvKqF2Tw
 unzip LOLv1.zip
 unzip LOLv2.zip
 rm -rf LOLv1.zip LOLv2.zip
+mkdir data
 mv LOLv1 data
 mv LOLv2 data
 ```
@@ -170,7 +171,7 @@ And now I will train model 1 and model 4 on dual branch:
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 nohup python3 basicsr/train.py --opt Options/DecompDualBranch2DDWavelet_1.yml > log_DecompDualBranch2DDWavelet_1.out 2>&1 &
-CUDA_VISIBLE_DEVICES=1 nohup python3 basicsr/train.py --opt Options/DecompDualBranch2DDWavelet_1.yml > log_DecompDualBranch2DDWavelet_4.out 2>&1 &
+CUDA_VISIBLE_DEVICES=1 nohup python3 basicsr/train.py --opt Options/DecompDualBranch2DDWavelet_2.yml > log_DecompDualBranch2DDWavelet_4.out 2>&1 &
 ```
 
 # Bayesian Enhancement Model
