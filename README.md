@@ -159,6 +159,20 @@ CUDA_VISIBLE_DEVICES=6 nohup python3 basicsr/train.py --opt Options/DecompSingle
 CUDA_VISIBLE_DEVICES=7 nohup python3 basicsr/train.py --opt Options/DecompSingleBranchDD_4.yml > log_DecompSingleBranchDD_4.out 2>&1 &
 ```
 
+I will continue training this two, as they offered the best results:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 nohup python3 basicsr/train.py --opt Options/DecompDualBranch2_1.yml --auto_resume > log_DecompDualBranch2_1.out 2>&1 &
+CUDA_VISIBLE_DEVICES=1 nohup python3 basicsr/train.py --opt Options/DecompDualBranch2DD_4.yml --auto_resume > log_DecompDualBranch2DD_4.out 2>&1 &
+```
+
+And now I will train model 1 and model 4 on dual branch:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 nohup python3 basicsr/train.py --opt Options/DecompDualBranch2DDWavelet_1.yml > log_DecompDualBranch2DDWavelet_1.out 2>&1 &
+CUDA_VISIBLE_DEVICES=1 nohup python3 basicsr/train.py --opt Options/DecompDualBranch2DDWavelet_1.yml > log_DecompDualBranch2DDWavelet_4.out 2>&1 &
+```
+
 # Bayesian Enhancement Model
 
 This is the official code for the paper [Bayesian Enhancement Models for One-to-Many Mapping in Image Enhancement](https://openreview.net/pdf?id=jJJOoLVAEm)
@@ -264,8 +278,7 @@ git clone git@github.com:Anonymous1563/Bayesian-Enhancement-Model.git
 
 ```bash
 cd Bayesian-Enhancement-Model
-pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url
-https://download.pytorch.org/whl/cu117
+pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117
 
 pip install -r requirements.txt
 
