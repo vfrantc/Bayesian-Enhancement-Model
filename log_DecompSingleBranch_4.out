@@ -1,0 +1,929 @@
+nohup: ignoring input
+Cannot import dcn. Ignore this warning if dcn is not used. Otherwise install BasicSR with compiling dcn.
+Cannot import selective_scan_cuda. This affects speed.
+Cannot import selective_scan_cuda. This affects speed.
+Disable distributed.
+Path already exists. Rename it to /home/vladimirfrants9/Bayesian-Enhancement-Model/experiments/DecompSingleBranch_1_archived_20241212_160305
+Path already exists. Rename it to /home/vladimirfrants9/Bayesian-Enhancement-Model/tb_logger/DecompSingleBranch_1_archived_20241212_160305
+2024-12-12 16:03:05,632 INFO: 
+                ____                _       _____  ____
+               / __ ) ____ _ _____ (_)_____/ ___/ / __ \
+              / __  |/ __ `// ___// // ___/\__ \ / /_/ /
+             / /_/ // /_/ /(__  )/ // /__ ___/ // _, _/
+            /_____/ \__,_//____//_/ \___//____//_/ |_|
+     ______                   __   __                 __      __
+    / ____/____   ____   ____/ /  / /   __  __ _____ / /__   / /
+   / / __ / __ \ / __ \ / __  /  / /   / / / // ___// //_/  / /
+  / /_/ // /_/ // /_/ // /_/ /  / /___/ /_/ // /__ / /<    /_/
+  \____/ \____/ \____/ \____/  /_____/\____/ \___//_/|_|  (_)
+    
+Version Information: 
+	BasicSR: 1.2.0+e53a779
+	PyTorch: 1.13.1+cu117
+	TorchVision: 0.14.1+cu117
+2024-12-12 16:03:05,632 INFO: 
+  name: DecompSingleBranch_1
+  model_type: ImageEnhancer
+  scale: 1
+  num_gpu: 1
+  manual_seed: 100
+  condition:[
+    type: mean
+    scale_down: 16
+    noise_level: 0.1
+  ]
+  datasets:[
+    train:[
+      name: TrainSet
+      type: Dataset_PairedImage_Mask
+      dataroot_gt: ./data/LOLv1/Train/target
+      dataroot_lq: ./data/LOLv1/Train/input
+      geometric_augs: True
+      condition:[
+        type: mean
+        scale_down: 16
+        noise_level: 0.1
+      ]
+      mim:[
+        mask_ratio: 0.75
+        mask_patch_size: 1
+        model_patch_size: 1
+      ]
+      filename_tmpl: {}
+      io_backend:[
+        type: disk
+      ]
+      use_shuffle: True
+      num_worker_per_gpu: 8
+      batch_size_per_gpu: 8
+      mini_batch_sizes: [8]
+      iters: [300000]
+      gt_size: 128
+      gt_sizes: [128]
+      dataset_enlarge_ratio: 1
+      prefetch_mode: None
+      phase: train
+      scale: 1
+    ]
+    val:[
+      name: ValSet
+      type: Dataset_PairedImage_Mask
+      dataroot_gt: ./data/LOLv1/Test/target
+      dataroot_lq: ./data/LOLv1/Test/input
+      condition:[
+        type: mean
+        scale_down: 16
+        noise_level: 0.1
+      ]
+      io_backend:[
+        type: disk
+      ]
+      phase: val
+      scale: 1
+    ]
+  ]
+  network_g:[
+    type: DecompSingleBranch
+    in_channels: 6
+    out_channels: 3
+    n_feat: 40
+    d_state: [1, 1, 1]
+    ssm_ratio: 1
+    mlp_ratio: 4
+    mlp_type: gdmlp
+    use_pixelshuffle: True
+    drop_path: 0.0
+    sam: False
+    stage: 1
+    num_blocks: [2, 2, 2]
+    decomp_model: model4
+  ]
+  path:[
+    pretrain_network_g: None
+    strict_load_g: True
+    resume_state: None
+    experiments_root: /home/vladimirfrants9/Bayesian-Enhancement-Model/experiments/DecompSingleBranch_1
+    models: /home/vladimirfrants9/Bayesian-Enhancement-Model/experiments/DecompSingleBranch_1/models
+    training_states: /home/vladimirfrants9/Bayesian-Enhancement-Model/experiments/DecompSingleBranch_1/training_states
+    log: /home/vladimirfrants9/Bayesian-Enhancement-Model/experiments/DecompSingleBranch_1
+    visualization: /home/vladimirfrants9/Bayesian-Enhancement-Model/experiments/DecompSingleBranch_1/visualization
+  ]
+  train:[
+    total_iter: 300000
+    warmup_iter: -1
+    max_grad_norm: 1
+    scheduler:[
+      type: CosineAnnealingRestartCyclicLR
+      periods: [150000, 46000, 104000]
+      restart_weights: [1, 1, 1]
+      eta_mins: [0.0002, 0.0002, 1e-06]
+    ]
+    optim_g:[
+      type: AdamW
+      lr: 0.0002
+      weight_decay: 0.0001
+      betas: [0.9, 0.999]
+    ]
+    mixing_augs:[
+      mixup: False
+    ]
+    pixel_opt:[
+      type: L1Loss
+      loss_weight: 1
+      reduction: mean
+    ]
+    perceptual_opt:[
+      type: PerceptualLoss
+      layer_weights:[
+        conv5_4: 1
+      ]
+      vgg_type: vgg19
+      use_input_norm: True
+      range_norm: False
+      perceptual_weight: 0.01
+      style_weight: 0
+      criterion: l1
+    ]
+  ]
+  val:[
+    window_size: 16
+    val_freq: 1000.0
+    save_img: True
+    rgb2bgr: True
+    use_image: True
+    max_minibatch: 8
+    metrics:[
+      psnr:[
+        type: calculate_psnr
+        crop_border: 0
+        test_y_channel: False
+      ]
+      ssim:[
+        type: calculate_ssim
+        crop_border: 0
+        test_y_channel: False
+      ]
+    ]
+  ]
+  logger:[
+    print_freq: 100
+    save_checkpoint_freq: 1000.0
+    use_tb_logger: True
+    record_grad: False
+    wandb:[
+      project: underwater
+      resume_id: None
+    ]
+  ]
+  dist_params:[
+    backend: nccl
+    port: 29500
+  ]
+  dist: False
+  rank: 0
+  world_size: 1
+  auto_resume: False
+  is_train: True
+  root_path: /home/vladimirfrants9/Bayesian-Enhancement-Model
+
+2024-12-12 16:03:06,455 INFO: Use wandb logger with id=gwu3xv1n; project=underwater.
+2024-12-12 16:03:06,477 INFO: Dataset [Dataset_PairedImage_Mask] - TrainSet is built.
+2024-12-12 16:03:06,478 INFO: Training statistics:
+	Number of train images: 485
+	Dataset enlarge ratio: 1
+	Batch size per gpu: 8
+	World size (gpu number): 1
+	Require iter number per epoch: 61
+	Total epochs: 4919; iters: 300000.
+2024-12-12 16:03:06,478 INFO: Dataset [Dataset_PairedImage_Mask] - ValSet is built.
+2024-12-12 16:03:06,479 INFO: Number of val images/folders in ValSet: 15
+2024-12-12 16:03:08,060 INFO: Network [DecompSingleBranch] is created.
+2024-12-12 16:03:08,071 INFO: Loss [L1Loss] is created.
+2024-12-12 16:03:09,483 INFO: Loss [PerceptualLoss] is created.
+2024-12-12 16:03:09,505 WARNING: Params decomp.conv_in.weight will not be optimized.
+2024-12-12 16:03:09,505 WARNING: Params decomp.conv_in.bias will not be optimized.
+2024-12-12 16:03:09,505 WARNING: Params decomp.branch_q1.0.weight will not be optimized.
+2024-12-12 16:03:09,505 WARNING: Params decomp.branch_q1.0.bias will not be optimized.
+2024-12-12 16:03:09,505 WARNING: Params decomp.branch_q1.2.weight will not be optimized.
+2024-12-12 16:03:09,505 WARNING: Params decomp.branch_q1.2.bias will not be optimized.
+2024-12-12 16:03:09,505 WARNING: Params decomp.branch_q2.0.weight will not be optimized.
+2024-12-12 16:03:09,506 WARNING: Params decomp.branch_q2.0.bias will not be optimized.
+2024-12-12 16:03:09,506 WARNING: Params decomp.branch_q2.2.weight will not be optimized.
+2024-12-12 16:03:09,506 WARNING: Params decomp.branch_q2.2.bias will not be optimized.
+2024-12-12 16:03:09,506 WARNING: Params decomp.cross_attn.q1_proj.weight will not be optimized.
+2024-12-12 16:03:09,506 WARNING: Params decomp.cross_attn.q1_proj.bias will not be optimized.
+2024-12-12 16:03:09,506 WARNING: Params decomp.cross_attn.k2_proj.weight will not be optimized.
+2024-12-12 16:03:09,506 WARNING: Params decomp.cross_attn.k2_proj.bias will not be optimized.
+2024-12-12 16:03:09,506 WARNING: Params decomp.cross_attn.v2_proj.weight will not be optimized.
+2024-12-12 16:03:09,506 WARNING: Params decomp.cross_attn.v2_proj.bias will not be optimized.
+2024-12-12 16:03:09,506 WARNING: Params decomp.cross_attn.q2_proj.weight will not be optimized.
+2024-12-12 16:03:09,507 WARNING: Params decomp.cross_attn.q2_proj.bias will not be optimized.
+2024-12-12 16:03:09,507 WARNING: Params decomp.cross_attn.k1_proj.weight will not be optimized.
+2024-12-12 16:03:09,507 WARNING: Params decomp.cross_attn.k1_proj.bias will not be optimized.
+2024-12-12 16:03:09,507 WARNING: Params decomp.cross_attn.v1_proj.weight will not be optimized.
+2024-12-12 16:03:09,507 WARNING: Params decomp.cross_attn.v1_proj.bias will not be optimized.
+2024-12-12 16:03:09,507 WARNING: Params decomp.cross_attn.out1.weight will not be optimized.
+2024-12-12 16:03:09,507 WARNING: Params decomp.cross_attn.out1.bias will not be optimized.
+2024-12-12 16:03:09,507 WARNING: Params decomp.cross_attn.out2.weight will not be optimized.
+2024-12-12 16:03:09,507 WARNING: Params decomp.cross_attn.out2.bias will not be optimized.
+2024-12-12 16:03:09,507 WARNING: Params decomp.fuse.weight will not be optimized.
+2024-12-12 16:03:09,508 WARNING: Params decomp.fuse.bias will not be optimized.
+2024-12-12 16:03:09,508 WARNING: Params decomp.conv_out.weight will not be optimized.
+2024-12-12 16:03:09,508 WARNING: Params decomp.conv_out.bias will not be optimized.
+2024-12-12 16:03:09,508 WARNING: Params decomp.sharpening.weight will not be optimized.
+2024-12-12 16:03:09,508 WARNING: Params decomp.sharpening.bias will not be optimized.
+2024-12-12 16:03:09,508 WARNING: Params decomp.smooth_q1.conv.weight will not be optimized.
+2024-12-12 16:03:09,508 WARNING: Params decomp.smooth_q1.conv.bias will not be optimized.
+2024-12-12 16:03:09,508 WARNING: Params decomp.smooth_q2.conv.weight will not be optimized.
+2024-12-12 16:03:09,508 WARNING: Params decomp.smooth_q2.conv.bias will not be optimized.
+DecompSingleBranch(
+  (decomp): Decomp(
+    (dwt): DWT()
+    (iwt): IWT()
+    (conv_in): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (branch_q1): Sequential(
+      (0): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (1): ReLU(inplace=True)
+      (2): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    )
+    (branch_q2): Sequential(
+      (0): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (1): ReLU(inplace=True)
+      (2): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    )
+    (cross_attn): SymmetricCrossAttention(
+      (q1_proj): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
+      (k2_proj): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
+      (v2_proj): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
+      (q2_proj): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
+      (k1_proj): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
+      (v1_proj): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
+      (out1): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
+      (out2): Conv2d(32, 32, kernel_size=(1, 1), stride=(1, 1))
+    )
+    (fuse): Conv2d(64, 32, kernel_size=(1, 1), stride=(1, 1))
+    (conv_out): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (sharpening): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (smooth_q1): PostSmooth(
+      (conv): Conv2d(4, 4, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=4)
+      (relu): ReLU(inplace=True)
+    )
+    (smooth_q2): PostSmooth(
+      (conv): Conv2d(4, 4, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=4)
+      (relu): ReLU(inplace=True)
+    )
+  )
+  (first_conv): Conv2d(11, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (encoders): ModuleList(
+    (0): Sequential(
+      (0): VSSBlock(
+        (norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+        (op): SS2D(
+          (out_norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+          (in_proj): Linear2d(in_features=40, out_features=40, bias=False)
+          (act): SiLU()
+          (conv2d): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+          (out_act): Identity()
+          (out_proj): Linear2d(in_features=40, out_features=40, bias=False)
+          (dropout): Identity()
+        )
+        (drop_path): timm.DropPath(0)
+        (norm2): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+        (mlp): gdMlp(
+          (project_in): Conv2d(40, 320, kernel_size=(1, 1), stride=(1, 1))
+          (dwconv): Conv2d(320, 320, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=320)
+          (project_out): Conv2d(160, 40, kernel_size=(1, 1), stride=(1, 1))
+          (act): GELU(approximate='none')
+        )
+      )
+      (1): VSSBlock(
+        (norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+        (op): SS2D(
+          (out_norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+          (in_proj): Linear2d(in_features=40, out_features=40, bias=False)
+          (act): SiLU()
+          (conv2d): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+          (out_act): Identity()
+          (out_proj): Linear2d(in_features=40, out_features=40, bias=False)
+          (dropout): Identity()
+        )
+        (drop_path): timm.DropPath(0)
+        (norm2): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+        (mlp): gdMlp(
+          (project_in): Conv2d(40, 320, kernel_size=(1, 1), stride=(1, 1))
+          (dwconv): Conv2d(320, 320, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=320)
+          (project_out): Conv2d(160, 40, kernel_size=(1, 1), stride=(1, 1))
+          (act): GELU(approximate='none')
+        )
+      )
+    )
+    (1): Sequential(
+      (0): VSSBlock(
+        (norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+        (op): SS2D(
+          (out_norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+          (in_proj): Linear2d(in_features=80, out_features=80, bias=False)
+          (act): SiLU()
+          (conv2d): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+          (out_act): Identity()
+          (out_proj): Linear2d(in_features=80, out_features=80, bias=False)
+          (dropout): Identity()
+        )
+        (drop_path): timm.DropPath(0)
+        (norm2): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+        (mlp): gdMlp(
+          (project_in): Conv2d(80, 640, kernel_size=(1, 1), stride=(1, 1))
+          (dwconv): Conv2d(640, 640, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=640)
+          (project_out): Conv2d(320, 80, kernel_size=(1, 1), stride=(1, 1))
+          (act): GELU(approximate='none')
+        )
+      )
+      (1): VSSBlock(
+        (norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+        (op): SS2D(
+          (out_norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+          (in_proj): Linear2d(in_features=80, out_features=80, bias=False)
+          (act): SiLU()
+          (conv2d): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+          (out_act): Identity()
+          (out_proj): Linear2d(in_features=80, out_features=80, bias=False)
+          (dropout): Identity()
+        )
+        (drop_path): timm.DropPath(0)
+        (norm2): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+        (mlp): gdMlp(
+          (project_in): Conv2d(80, 640, kernel_size=(1, 1), stride=(1, 1))
+          (dwconv): Conv2d(640, 640, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=640)
+          (project_out): Conv2d(320, 80, kernel_size=(1, 1), stride=(1, 1))
+          (act): GELU(approximate='none')
+        )
+      )
+    )
+  )
+  (bottleneck): Sequential(
+    (0): VSSBlock(
+      (norm): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
+      (op): SS2D(
+        (out_norm): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
+        (in_proj): Linear2d(in_features=160, out_features=160, bias=False)
+        (act): SiLU()
+        (conv2d): Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=160, bias=False)
+        (out_act): Identity()
+        (out_proj): Linear2d(in_features=160, out_features=160, bias=False)
+        (dropout): Identity()
+      )
+      (drop_path): timm.DropPath(0)
+      (norm2): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
+      (mlp): gdMlp(
+        (project_in): Conv2d(160, 1280, kernel_size=(1, 1), stride=(1, 1))
+        (dwconv): Conv2d(1280, 1280, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=1280)
+        (project_out): Conv2d(640, 160, kernel_size=(1, 1), stride=(1, 1))
+        (act): GELU(approximate='none')
+      )
+    )
+    (1): VSSBlock(
+      (norm): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
+      (op): SS2D(
+        (out_norm): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
+        (in_proj): Linear2d(in_features=160, out_features=160, bias=False)
+        (act): SiLU()
+        (conv2d): Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=160, bias=False)
+        (out_act): Identity()
+        (out_proj): Linear2d(in_features=160, out_features=160, bias=False)
+        (dropout): Identity()
+      )
+      (drop_path): timm.DropPath(0)
+      (norm2): LayerNorm2d((160,), eps=1e-05, elementwise_affine=True)
+      (mlp): gdMlp(
+        (project_in): Conv2d(160, 1280, kernel_size=(1, 1), stride=(1, 1))
+        (dwconv): Conv2d(1280, 1280, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=1280)
+        (project_out): Conv2d(640, 160, kernel_size=(1, 1), stride=(1, 1))
+        (act): GELU(approximate='none')
+      )
+    )
+  )
+  (decoders): ModuleList(
+    (0): ModuleDict(
+      (up): ConvTranspose2d(160, 80, kernel_size=(2, 2), stride=(2, 2))
+      (fuse): Conv2d(160, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (block): Sequential(
+        (0): VSSBlock(
+          (norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+          (op): SS2D(
+            (out_norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+            (in_proj): Linear2d(in_features=80, out_features=80, bias=False)
+            (act): SiLU()
+            (conv2d): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+            (out_act): Identity()
+            (out_proj): Linear2d(in_features=80, out_features=80, bias=False)
+            (dropout): Identity()
+          )
+          (drop_path): timm.DropPath(0)
+          (norm2): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+          (mlp): gdMlp(
+            (project_in): Conv2d(80, 640, kernel_size=(1, 1), stride=(1, 1))
+            (dwconv): Conv2d(640, 640, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=640)
+            (project_out): Conv2d(320, 80, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate='none')
+          )
+        )
+        (1): VSSBlock(
+          (norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+          (op): SS2D(
+            (out_norm): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+            (in_proj): Linear2d(in_features=80, out_features=80, bias=False)
+            (act): SiLU()
+            (conv2d): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+            (out_act): Identity()
+            (out_proj): Linear2d(in_features=80, out_features=80, bias=False)
+            (dropout): Identity()
+          )
+          (drop_path): timm.DropPath(0)
+          (norm2): LayerNorm2d((80,), eps=1e-05, elementwise_affine=True)
+          (mlp): gdMlp(
+            (project_in): Conv2d(80, 640, kernel_size=(1, 1), stride=(1, 1))
+            (dwconv): Conv2d(640, 640, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=640)
+            (project_out): Conv2d(320, 80, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate='none')
+          )
+        )
+      )
+    )
+    (1): ModuleDict(
+      (up): ConvTranspose2d(80, 40, kernel_size=(2, 2), stride=(2, 2))
+      (fuse): Conv2d(80, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (block): Sequential(
+        (0): VSSBlock(
+          (norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+          (op): SS2D(
+            (out_norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+            (in_proj): Linear2d(in_features=40, out_features=40, bias=False)
+            (act): SiLU()
+            (conv2d): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+            (out_act): Identity()
+            (out_proj): Linear2d(in_features=40, out_features=40, bias=False)
+            (dropout): Identity()
+          )
+          (drop_path): timm.DropPath(0)
+          (norm2): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+          (mlp): gdMlp(
+            (project_in): Conv2d(40, 320, kernel_size=(1, 1), stride=(1, 1))
+            (dwconv): Conv2d(320, 320, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=320)
+            (project_out): Conv2d(160, 40, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate='none')
+          )
+        )
+        (1): VSSBlock(
+          (norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+          (op): SS2D(
+            (out_norm): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+            (in_proj): Linear2d(in_features=40, out_features=40, bias=False)
+            (act): SiLU()
+            (conv2d): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+            (out_act): Identity()
+            (out_proj): Linear2d(in_features=40, out_features=40, bias=False)
+            (dropout): Identity()
+          )
+          (drop_path): timm.DropPath(0)
+          (norm2): LayerNorm2d((40,), eps=1e-05, elementwise_affine=True)
+          (mlp): gdMlp(
+            (project_in): Conv2d(40, 320, kernel_size=(1, 1), stride=(1, 1))
+            (dwconv): Conv2d(320, 320, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=320)
+            (project_out): Conv2d(160, 40, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate='none')
+          )
+        )
+      )
+    )
+  )
+  (proj): Conv2d(40, 8, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (last_act): Identity()
+  (down_layers): ModuleList(
+    (0): Conv2d(40, 80, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1), bias=False)
+    (1): Conv2d(80, 160, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1), bias=False)
+  )
+  (drop_path): Identity()
+)
+2024-12-12 16:03:09,615 INFO: Start training from epoch: 0, iter: 0
+2024-12-12 16:03:29,315 INFO: [Decom..][epoch:  1, iter:     100, lr:(2.000e-04,2.000e-04,)] [eta: 13:38:05, time (data): 0.197 (0.009)] l_pix: 1.0052e-01 l_percep: 2.7461e+00 
+2024-12-12 16:03:46,346 INFO: [Decom..][epoch:  3, iter:     200, lr:(2.000e-04,2.000e-04,)] [eta: 13:54:18, time (data): 0.184 (0.009)] l_pix: 7.3717e-02 l_percep: 2.4856e+00 
+2024-12-12 16:04:03,170 INFO: [Decom..][epoch:  4, iter:     300, lr:(2.000e-04,2.000e-04,)] [eta: 13:56:08, time (data): 0.168 (0.006)] l_pix: 5.9351e-02 l_percep: 2.3249e+00 
+2024-12-12 16:04:20,367 INFO: [Decom..][epoch:  6, iter:     400, lr:(2.000e-04,2.000e-04,)] [eta: 14:01:33, time (data): 0.170 (0.008)] l_pix: 5.4859e-02 l_percep: 2.5446e+00 
+2024-12-12 16:04:37,512 INFO: [Decom..][epoch:  8, iter:     500, lr:(2.000e-04,2.000e-04,)] [eta: 14:04:10, time (data): 0.171 (0.010)] l_pix: 4.9479e-02 l_percep: 2.1259e+00 
+2024-12-12 16:04:54,293 INFO: [Decom..][epoch:  9, iter:     600, lr:(2.000e-04,2.000e-04,)] [eta: 14:02:48, time (data): 0.170 (0.008)] l_pix: 5.7882e-02 l_percep: 2.0119e+00 
+2024-12-12 16:05:11,360 INFO: [Decom..][epoch: 11, iter:     700, lr:(2.000e-04,2.000e-04,)] [eta: 14:03:47, time (data): 0.168 (0.007)] l_pix: 5.0914e-02 l_percep: 2.0406e+00 
+2024-12-12 16:05:28,686 INFO: [Decom..][epoch: 13, iter:     800, lr:(2.000e-04,2.000e-04,)] [eta: 14:06:03, time (data): 0.170 (0.008)] l_pix: 5.4690e-02 l_percep: 1.8083e+00 
+2024-12-12 16:05:45,511 INFO: [Decom..][epoch: 14, iter:     900, lr:(2.000e-04,2.000e-04,)] [eta: 14:04:59, time (data): 0.168 (0.006)] l_pix: 6.3713e-02 l_percep: 2.1731e+00 
+2024-12-12 16:06:02,665 INFO: [Decom..][epoch: 16, iter:   1,000, lr:(2.000e-04,2.000e-04,)] [eta: 14:05:43, time (data): 0.170 (0.008)] l_pix: 5.5401e-02 l_percep: 1.4785e+00 
+2024-12-12 16:06:02,667 INFO: Saving models and training states.
+2024-12-12 16:06:07,470 INFO: Validation ValSet,		 # psnr: 24.3889	 # ssim: 0.7748
+2024-12-12 16:06:24,741 INFO: [Decom..][epoch: 18, iter:   1,100, lr:(2.000e-04,2.000e-04,)] [eta: 14:28:32, time (data): 0.173 (0.010)] l_pix: 4.8439e-02 l_percep: 2.0098e+00 
+2024-12-12 16:06:41,509 INFO: [Decom..][epoch: 19, iter:   1,200, lr:(2.000e-04,2.000e-04,)] [eta: 14:25:28, time (data): 0.170 (0.008)] l_pix: 4.3241e-02 l_percep: 2.0013e+00 
+2024-12-12 16:06:58,833 INFO: [Decom..][epoch: 21, iter:   1,300, lr:(2.000e-04,2.000e-04,)] [eta: 14:24:58, time (data): 0.170 (0.007)] l_pix: 4.4001e-02 l_percep: 1.5001e+00 
+2024-12-12 16:07:15,982 INFO: [Decom..][epoch: 23, iter:   1,400, lr:(2.000e-04,2.000e-04,)] [eta: 14:23:53, time (data): 0.171 (0.008)] l_pix: 3.7684e-02 l_percep: 1.7100e+00 
+2024-12-12 16:07:32,733 INFO: [Decom..][epoch: 24, iter:   1,500, lr:(2.000e-04,2.000e-04,)] [eta: 14:21:35, time (data): 0.168 (0.007)] l_pix: 4.1838e-02 l_percep: 1.5627e+00 
+2024-12-12 16:07:49,904 INFO: [Decom..][epoch: 26, iter:   1,600, lr:(2.000e-04,2.000e-04,)] [eta: 14:20:50, time (data): 0.170 (0.008)] l_pix: 3.4162e-02 l_percep: 1.3501e+00 
+2024-12-12 16:08:07,035 INFO: [Decom..][epoch: 28, iter:   1,700, lr:(2.000e-04,2.000e-04,)] [eta: 14:20:01, time (data): 0.172 (0.011)] l_pix: 3.2121e-02 l_percep: 1.5960e+00 
+2024-12-12 16:08:23,924 INFO: [Decom..][epoch: 29, iter:   1,800, lr:(2.000e-04,2.000e-04,)] [eta: 14:18:36, time (data): 0.170 (0.009)] l_pix: 4.0386e-02 l_percep: 1.3170e+00 
+2024-12-12 16:08:41,044 INFO: [Decom..][epoch: 31, iter:   1,900, lr:(2.000e-04,2.000e-04,)] [eta: 14:17:54, time (data): 0.168 (0.007)] l_pix: 2.9131e-02 l_percep: 1.2523e+00 
+2024-12-12 16:08:58,370 INFO: [Decom..][epoch: 33, iter:   2,000, lr:(2.000e-04,2.000e-04,)] [eta: 14:17:46, time (data): 0.171 (0.009)] l_pix: 3.1979e-02 l_percep: 1.4217e+00 
+2024-12-12 16:08:58,371 INFO: Saving models and training states.
+2024-12-12 16:09:01,896 INFO: Validation ValSet,		 # psnr: 24.8066	 # ssim: 0.8018
+2024-12-12 16:09:18,784 INFO: [Decom..][epoch: 34, iter:   2,100, lr:(2.000e-04,2.000e-04,)] [eta: 14:24:54, time (data): 0.169 (0.007)] l_pix: 3.5732e-02 l_percep: 1.5380e+00 
+2024-12-12 16:09:35,970 INFO: [Decom..][epoch: 36, iter:   2,200, lr:(2.000e-04,2.000e-04,)] [eta: 14:24:05, time (data): 0.170 (0.008)] l_pix: 3.1382e-02 l_percep: 1.2509e+00 
+2024-12-12 16:09:53,149 INFO: [Decom..][epoch: 38, iter:   2,300, lr:(2.000e-04,2.000e-04,)] [eta: 14:23:18, time (data): 0.173 (0.010)] l_pix: 4.2580e-02 l_percep: 1.6252e+00 
+2024-12-12 16:10:09,888 INFO: [Decom..][epoch: 39, iter:   2,400, lr:(2.000e-04,2.000e-04,)] [eta: 14:21:39, time (data): 0.170 (0.008)] l_pix: 3.6496e-02 l_percep: 1.2557e+00 
+2024-12-12 16:10:27,031 INFO: [Decom..][epoch: 41, iter:   2,500, lr:(2.000e-04,2.000e-04,)] [eta: 14:20:54, time (data): 0.169 (0.007)] l_pix: 3.5147e-02 l_percep: 1.1968e+00 
+2024-12-12 16:10:44,163 INFO: [Decom..][epoch: 43, iter:   2,600, lr:(2.000e-04,2.000e-04,)] [eta: 14:20:10, time (data): 0.170 (0.008)] l_pix: 4.6162e-02 l_percep: 1.6016e+00 
+2024-12-12 16:11:00,907 INFO: [Decom..][epoch: 44, iter:   2,700, lr:(2.000e-04,2.000e-04,)] [eta: 14:18:46, time (data): 0.168 (0.007)] l_pix: 3.2964e-02 l_percep: 1.2077e+00 
+2024-12-12 16:11:18,109 INFO: [Decom..][epoch: 46, iter:   2,800, lr:(2.000e-04,2.000e-04,)] [eta: 14:18:15, time (data): 0.170 (0.009)] l_pix: 3.4535e-02 l_percep: 1.4350e+00 
+2024-12-12 16:11:35,212 INFO: [Decom..][epoch: 48, iter:   2,900, lr:(2.000e-04,2.000e-04,)] [eta: 14:17:34, time (data): 0.172 (0.011)] l_pix: 3.3183e-02 l_percep: 1.8363e+00 
+2024-12-12 16:11:52,069 INFO: [Decom..][epoch: 49, iter:   3,000, lr:(2.000e-04,2.000e-04,)] [eta: 14:16:31, time (data): 0.170 (0.008)] l_pix: 4.6389e-02 l_percep: 1.7169e+00 
+2024-12-12 16:11:52,071 INFO: Saving models and training states.
+2024-12-12 16:11:55,628 INFO: Validation ValSet,		 # psnr: 25.8012	 # ssim: 0.8084
+2024-12-12 16:12:12,862 INFO: [Decom..][epoch: 51, iter:   3,100, lr:(2.000e-04,2.000e-04,)] [eta: 14:21:48, time (data): 0.170 (0.007)] l_pix: 3.8774e-02 l_percep: 1.6004e+00 
+2024-12-12 16:12:30,067 INFO: [Decom..][epoch: 53, iter:   3,200, lr:(2.000e-04,2.000e-04,)] [eta: 14:21:11, time (data): 0.171 (0.008)] l_pix: 4.1003e-02 l_percep: 1.7176e+00 
+2024-12-12 16:12:47,034 INFO: [Decom..][epoch: 54, iter:   3,300, lr:(2.000e-04,2.000e-04,)] [eta: 14:20:14, time (data): 0.170 (0.007)] l_pix: 2.8933e-02 l_percep: 1.3775e+00 
+2024-12-12 16:13:04,142 INFO: [Decom..][epoch: 56, iter:   3,400, lr:(2.000e-04,2.000e-04,)] [eta: 14:19:31, time (data): 0.171 (0.009)] l_pix: 3.6851e-02 l_percep: 1.2791e+00 
+2024-12-12 16:13:21,306 INFO: [Decom..][epoch: 58, iter:   3,500, lr:(2.000e-04,2.000e-04,)] [eta: 14:18:55, time (data): 0.172 (0.011)] l_pix: 4.7627e-02 l_percep: 1.5479e+00 
+2024-12-12 16:13:38,154 INFO: [Decom..][epoch: 59, iter:   3,600, lr:(2.000e-04,2.000e-04,)] [eta: 14:17:54, time (data): 0.170 (0.008)] l_pix: 2.9275e-02 l_percep: 1.2259e+00 
+2024-12-12 16:13:55,355 INFO: [Decom..][epoch: 61, iter:   3,700, lr:(2.000e-04,2.000e-04,)] [eta: 14:17:23, time (data): 0.169 (0.007)] l_pix: 4.5493e-02 l_percep: 1.1019e+00 
+2024-12-12 16:14:12,507 INFO: [Decom..][epoch: 63, iter:   3,800, lr:(2.000e-04,2.000e-04,)] [eta: 14:16:49, time (data): 0.170 (0.009)] l_pix: 4.0099e-02 l_percep: 1.4669e+00 
+2024-12-12 16:14:29,308 INFO: [Decom..][epoch: 64, iter:   3,900, lr:(2.000e-04,2.000e-04,)] [eta: 14:15:50, time (data): 0.169 (0.008)] l_pix: 3.7419e-02 l_percep: 1.4853e+00 
+2024-12-12 16:14:46,457 INFO: [Decom..][epoch: 66, iter:   4,000, lr:(2.000e-04,2.000e-04,)] [eta: 14:15:18, time (data): 0.170 (0.009)] l_pix: 4.7510e-02 l_percep: 1.5676e+00 
+2024-12-12 16:14:46,459 INFO: Saving models and training states.
+2024-12-12 16:14:49,887 INFO: Validation ValSet,		 # psnr: 25.6410	 # ssim: 0.8159
+2024-12-12 16:15:07,109 INFO: [Decom..][epoch: 68, iter:   4,100, lr:(2.000e-04,2.000e-04,)] [eta: 14:19:00, time (data): 0.173 (0.012)] l_pix: 3.0369e-02 l_percep: 1.2122e+00 
+2024-12-12 16:15:23,836 INFO: [Decom..][epoch: 69, iter:   4,200, lr:(2.000e-04,2.000e-04,)] [eta: 14:17:54, time (data): 0.170 (0.009)] l_pix: 2.8892e-02 l_percep: 1.2898e+00 
+2024-12-12 16:15:41,164 INFO: [Decom..][epoch: 71, iter:   4,300, lr:(2.000e-04,2.000e-04,)] [eta: 14:17:32, time (data): 0.170 (0.007)] l_pix: 3.3015e-02 l_percep: 1.2762e+00 
+2024-12-12 16:15:58,418 INFO: [Decom..][epoch: 73, iter:   4,400, lr:(2.000e-04,2.000e-04,)] [eta: 14:17:04, time (data): 0.172 (0.009)] l_pix: 3.6308e-02 l_percep: 1.3362e+00 
+2024-12-12 16:16:15,218 INFO: [Decom..][epoch: 74, iter:   4,500, lr:(2.000e-04,2.000e-04,)] [eta: 14:16:08, time (data): 0.169 (0.007)] l_pix: 3.7985e-02 l_percep: 1.3592e+00 
+2024-12-12 16:16:32,501 INFO: [Decom..][epoch: 76, iter:   4,600, lr:(2.000e-04,2.000e-04,)] [eta: 14:15:44, time (data): 0.171 (0.009)] l_pix: 3.2622e-02 l_percep: 1.3335e+00 
+2024-12-12 16:16:49,903 INFO: [Decom..][epoch: 78, iter:   4,700, lr:(2.000e-04,2.000e-04,)] [eta: 14:15:28, time (data): 0.172 (0.008)] l_pix: 4.2057e-02 l_percep: 1.7052e+00 
+2024-12-12 16:17:06,903 INFO: [Decom..][epoch: 79, iter:   4,800, lr:(2.000e-04,2.000e-04,)] [eta: 14:14:47, time (data): 0.171 (0.007)] l_pix: 4.7154e-02 l_percep: 1.8263e+00 
+2024-12-12 16:17:24,149 INFO: [Decom..][epoch: 81, iter:   4,900, lr:(2.000e-04,2.000e-04,)] [eta: 14:14:22, time (data): 0.171 (0.008)] l_pix: 2.4974e-02 l_percep: 1.0485e+00 
+2024-12-12 16:17:41,330 INFO: [Decom..][epoch: 83, iter:   5,000, lr:(2.000e-04,2.000e-04,)] [eta: 14:13:53, time (data): 0.171 (0.009)] l_pix: 3.1694e-02 l_percep: 1.3351e+00 
+2024-12-12 16:17:41,331 INFO: Saving models and training states.
+2024-12-12 16:17:45,067 INFO: Validation ValSet,		 # psnr: 24.6499	 # ssim: 0.8184
+2024-12-12 16:18:02,051 INFO: [Decom..][epoch: 84, iter:   5,100, lr:(2.000e-04,2.000e-04,)] [eta: 14:16:50, time (data): 0.171 (0.008)] l_pix: 3.7690e-02 l_percep: 1.1693e+00 
+2024-12-12 16:18:19,403 INFO: [Decom..][epoch: 86, iter:   5,200, lr:(2.000e-04,2.000e-04,)] [eta: 14:16:28, time (data): 0.172 (0.009)] l_pix: 2.8172e-02 l_percep: 1.1813e+00 
+2024-12-12 16:18:36,702 INFO: [Decom..][epoch: 88, iter:   5,300, lr:(2.000e-04,2.000e-04,)] [eta: 14:16:03, time (data): 0.171 (0.008)] l_pix: 3.5149e-02 l_percep: 1.4015e+00 
+2024-12-12 16:18:53,661 INFO: [Decom..][epoch: 89, iter:   5,400, lr:(2.000e-04,2.000e-04,)] [eta: 14:15:20, time (data): 0.170 (0.007)] l_pix: 3.2460e-02 l_percep: 1.3727e+00 
+2024-12-12 16:19:10,740 INFO: [Decom..][epoch: 91, iter:   5,500, lr:(2.000e-04,2.000e-04,)] [eta: 14:14:44, time (data): 0.169 (0.007)] l_pix: 2.6268e-02 l_percep: 1.2321e+00 
+2024-12-12 16:19:27,976 INFO: [Decom..][epoch: 93, iter:   5,600, lr:(2.000e-04,2.000e-04,)] [eta: 14:14:17, time (data): 0.171 (0.009)] l_pix: 3.4306e-02 l_percep: 1.4228e+00 
+2024-12-12 16:19:44,699 INFO: [Decom..][epoch: 94, iter:   5,700, lr:(2.000e-04,2.000e-04,)] [eta: 14:13:24, time (data): 0.169 (0.008)] l_pix: 3.0483e-02 l_percep: 1.2559e+00 
+2024-12-12 16:20:01,877 INFO: [Decom..][epoch: 96, iter:   5,800, lr:(2.000e-04,2.000e-04,)] [eta: 14:12:56, time (data): 0.171 (0.009)] l_pix: 3.6105e-02 l_percep: 1.4457e+00 
+2024-12-12 16:20:19,118 INFO: [Decom..][epoch: 98, iter:   5,900, lr:(2.000e-04,2.000e-04,)] [eta: 14:12:31, time (data): 0.171 (0.008)] l_pix: 3.0575e-02 l_percep: 1.0981e+00 
+2024-12-12 16:20:35,979 INFO: [Decom..][epoch: 99, iter:   6,000, lr:(2.000e-04,2.000e-04,)] [eta: 14:11:47, time (data): 0.169 (0.007)] l_pix: 3.5482e-02 l_percep: 1.4056e+00 
+2024-12-12 16:20:35,981 INFO: Saving models and training states.
+2024-12-12 16:20:39,821 INFO: Validation ValSet,		 # psnr: 24.1413	 # ssim: 0.8331
+2024-12-12 16:20:56,901 INFO: [Decom..][epoch:101, iter:   6,100, lr:(2.000e-04,2.000e-04,)] [eta: 14:14:20, time (data): 0.169 (0.007)] l_pix: 3.5831e-02 l_percep: 1.2502e+00 
+2024-12-12 16:21:13,987 INFO: [Decom..][epoch:103, iter:   6,200, lr:(2.000e-04,2.000e-04,)] [eta: 14:13:46, time (data): 0.170 (0.008)] l_pix: 3.1506e-02 l_percep: 1.2692e+00 
+2024-12-12 16:21:30,795 INFO: [Decom..][epoch:104, iter:   6,300, lr:(2.000e-04,2.000e-04,)] [eta: 14:12:59, time (data): 0.169 (0.007)] l_pix: 2.8708e-02 l_percep: 1.0578e+00 
+2024-12-12 16:21:47,941 INFO: [Decom..][epoch:106, iter:   6,400, lr:(2.000e-04,2.000e-04,)] [eta: 14:12:29, time (data): 0.170 (0.009)] l_pix: 3.5416e-02 l_percep: 1.5461e+00 
+2024-12-12 16:22:05,017 INFO: [Decom..][epoch:108, iter:   6,500, lr:(2.000e-04,2.000e-04,)] [eta: 14:11:56, time (data): 0.169 (0.008)] l_pix: 3.3474e-02 l_percep: 1.4094e+00 
+2024-12-12 16:22:21,893 INFO: [Decom..][epoch:109, iter:   6,600, lr:(2.000e-04,2.000e-04,)] [eta: 14:11:15, time (data): 0.169 (0.007)] l_pix: 2.9265e-02 l_percep: 1.2900e+00 
+2024-12-12 16:22:39,024 INFO: [Decom..][epoch:111, iter:   6,700, lr:(2.000e-04,2.000e-04,)] [eta: 14:10:45, time (data): 0.169 (0.008)] l_pix: 3.1521e-02 l_percep: 1.3283e+00 
+2024-12-12 16:22:56,134 INFO: [Decom..][epoch:113, iter:   6,800, lr:(2.000e-04,2.000e-04,)] [eta: 14:10:15, time (data): 0.170 (0.009)] l_pix: 2.6530e-02 l_percep: 1.1320e+00 
+2024-12-12 16:23:12,917 INFO: [Decom..][epoch:114, iter:   6,900, lr:(2.000e-04,2.000e-04,)] [eta: 14:09:31, time (data): 0.170 (0.008)] l_pix: 3.2432e-02 l_percep: 1.1326e+00 
+2024-12-12 16:23:30,013 INFO: [Decom..][epoch:116, iter:   7,000, lr:(2.000e-04,2.000e-04,)] [eta: 14:09:02, time (data): 0.170 (0.009)] l_pix: 2.6519e-02 l_percep: 1.1447e+00 
+2024-12-12 16:23:30,015 INFO: Saving models and training states.
+2024-12-12 16:23:33,740 INFO: Validation ValSet,		 # psnr: 25.5053	 # ssim: 0.8289
+2024-12-12 16:23:51,125 INFO: [Decom..][epoch:118, iter:   7,100, lr:(2.000e-04,2.000e-04,)] [eta: 14:11:18, time (data): 0.173 (0.008)] l_pix: 2.5859e-02 l_percep: 1.0983e+00 
+2024-12-12 16:24:08,070 INFO: [Decom..][epoch:119, iter:   7,200, lr:(2.000e-04,2.000e-04,)] [eta: 14:10:41, time (data): 0.171 (0.007)] l_pix: 2.6179e-02 l_percep: 1.2819e+00 
+2024-12-12 16:24:25,442 INFO: [Decom..][epoch:121, iter:   7,300, lr:(2.000e-04,2.000e-04,)] [eta: 14:10:21, time (data): 0.171 (0.008)] l_pix: 3.1234e-02 l_percep: 9.2461e-01 
+2024-12-12 16:24:42,763 INFO: [Decom..][epoch:123, iter:   7,400, lr:(2.000e-04,2.000e-04,)] [eta: 14:09:59, time (data): 0.172 (0.009)] l_pix: 2.6638e-02 l_percep: 1.1950e+00 
+2024-12-12 16:24:59,660 INFO: [Decom..][epoch:124, iter:   7,500, lr:(2.000e-04,2.000e-04,)] [eta: 14:09:21, time (data): 0.171 (0.009)] l_pix: 3.0666e-02 l_percep: 1.1743e+00 
+2024-12-12 16:25:17,011 INFO: [Decom..][epoch:126, iter:   7,600, lr:(2.000e-04,2.000e-04,)] [eta: 14:09:01, time (data): 0.173 (0.009)] l_pix: 2.8112e-02 l_percep: 9.2842e-01 
+2024-12-12 16:25:34,049 INFO: [Decom..][epoch:128, iter:   7,700, lr:(2.000e-04,2.000e-04,)] [eta: 14:08:29, time (data): 0.170 (0.008)] l_pix: 2.7134e-02 l_percep: 1.2623e+00 
+2024-12-12 16:25:50,828 INFO: [Decom..][epoch:129, iter:   7,800, lr:(2.000e-04,2.000e-04,)] [eta: 14:07:47, time (data): 0.168 (0.007)] l_pix: 2.4568e-02 l_percep: 1.2537e+00 
+2024-12-12 16:26:07,903 INFO: [Decom..][epoch:131, iter:   7,900, lr:(2.000e-04,2.000e-04,)] [eta: 14:07:17, time (data): 0.170 (0.009)] l_pix: 3.9512e-02 l_percep: 1.0679e+00 
+2024-12-12 16:26:25,027 INFO: [Decom..][epoch:133, iter:   8,000, lr:(2.000e-04,2.000e-04,)] [eta: 14:06:50, time (data): 0.171 (0.009)] l_pix: 2.8416e-02 l_percep: 1.4751e+00 
+2024-12-12 16:26:25,029 INFO: Saving models and training states.
+2024-12-12 16:26:28,612 INFO: Validation ValSet,		 # psnr: 25.6246	 # ssim: 0.8392
+2024-12-12 16:26:45,344 INFO: [Decom..][epoch:134, iter:   8,100, lr:(2.000e-04,2.000e-04,)] [eta: 14:08:18, time (data): 0.170 (0.009)] l_pix: 2.1535e-02 l_percep: 1.2109e+00 
+2024-12-12 16:27:02,457 INFO: [Decom..][epoch:136, iter:   8,200, lr:(2.000e-04,2.000e-04,)] [eta: 14:07:49, time (data): 0.171 (0.010)] l_pix: 2.8573e-02 l_percep: 1.2253e+00 
+2024-12-12 16:27:19,630 INFO: [Decom..][epoch:138, iter:   8,300, lr:(2.000e-04,2.000e-04,)] [eta: 14:07:22, time (data): 0.170 (0.008)] l_pix: 2.8528e-02 l_percep: 1.1739e+00 
+2024-12-12 16:27:36,457 INFO: [Decom..][epoch:139, iter:   8,400, lr:(2.000e-04,2.000e-04,)] [eta: 14:06:44, time (data): 0.169 (0.007)] l_pix: 3.5779e-02 l_percep: 1.2874e+00 
+2024-12-12 16:27:53,576 INFO: [Decom..][epoch:141, iter:   8,500, lr:(2.000e-04,2.000e-04,)] [eta: 14:06:16, time (data): 0.171 (0.009)] l_pix: 2.6765e-02 l_percep: 1.0418e+00 
+2024-12-12 16:28:10,758 INFO: [Decom..][epoch:143, iter:   8,600, lr:(2.000e-04,2.000e-04,)] [eta: 14:05:50, time (data): 0.171 (0.009)] l_pix: 3.1914e-02 l_percep: 9.9806e-01 
+2024-12-12 16:28:27,711 INFO: [Decom..][epoch:144, iter:   8,700, lr:(2.000e-04,2.000e-04,)] [eta: 14:05:17, time (data): 0.167 (0.004)] l_pix: 3.4335e-02 l_percep: 1.1869e+00 
+2024-12-12 16:28:44,985 INFO: [Decom..][epoch:146, iter:   8,800, lr:(2.000e-04,2.000e-04,)] [eta: 14:04:55, time (data): 0.171 (0.008)] l_pix: 2.6068e-02 l_percep: 1.1144e+00 
+2024-12-12 16:29:02,336 INFO: [Decom..][epoch:148, iter:   8,900, lr:(2.000e-04,2.000e-04,)] [eta: 14:04:36, time (data): 0.172 (0.009)] l_pix: 2.6128e-02 l_percep: 1.1430e+00 
+2024-12-12 16:29:19,323 INFO: [Decom..][epoch:149, iter:   9,000, lr:(2.000e-04,2.000e-04,)] [eta: 14:04:05, time (data): 0.170 (0.008)] l_pix: 2.6564e-02 l_percep: 1.1922e+00 
+2024-12-12 16:29:19,325 INFO: Saving models and training states.
+2024-12-12 16:29:23,183 INFO: Validation ValSet,		 # psnr: 24.7616	 # ssim: 0.8319
+2024-12-12 16:29:40,409 INFO: [Decom..][epoch:151, iter:   9,100, lr:(2.000e-04,2.000e-04,)] [eta: 14:05:45, time (data): 0.170 (0.009)] l_pix: 2.3816e-02 l_percep: 1.1421e+00 
+2024-12-12 16:29:57,687 INFO: [Decom..][epoch:153, iter:   9,200, lr:(2.000e-04,2.000e-04,)] [eta: 14:05:23, time (data): 0.172 (0.010)] l_pix: 3.0438e-02 l_percep: 1.3980e+00 
+2024-12-12 16:30:14,685 INFO: [Decom..][epoch:154, iter:   9,300, lr:(2.000e-04,2.000e-04,)] [eta: 14:04:51, time (data): 0.166 (0.003)] l_pix: 3.0969e-02 l_percep: 1.4075e+00 
+2024-12-12 16:30:31,975 INFO: [Decom..][epoch:156, iter:   9,400, lr:(2.000e-04,2.000e-04,)] [eta: 14:04:29, time (data): 0.170 (0.008)] l_pix: 2.3037e-02 l_percep: 1.3014e+00 
+2024-12-12 16:30:49,358 INFO: [Decom..][epoch:158, iter:   9,500, lr:(2.000e-04,2.000e-04,)] [eta: 14:04:10, time (data): 0.173 (0.010)] l_pix: 2.4253e-02 l_percep: 1.4700e+00 
+2024-12-12 16:31:06,392 INFO: [Decom..][epoch:159, iter:   9,600, lr:(2.000e-04,2.000e-04,)] [eta: 14:03:41, time (data): 0.171 (0.008)] l_pix: 2.7367e-02 l_percep: 1.2939e+00 
+2024-12-12 16:31:23,794 INFO: [Decom..][epoch:161, iter:   9,700, lr:(2.000e-04,2.000e-04,)] [eta: 14:03:22, time (data): 0.173 (0.010)] l_pix: 3.1594e-02 l_percep: 1.2681e+00 
+2024-12-12 16:31:41,233 INFO: [Decom..][epoch:163, iter:   9,800, lr:(2.000e-04,2.000e-04,)] [eta: 14:03:05, time (data): 0.174 (0.010)] l_pix: 2.4010e-02 l_percep: 1.1420e+00 
+2024-12-12 16:31:58,220 INFO: [Decom..][epoch:164, iter:   9,900, lr:(2.000e-04,2.000e-04,)] [eta: 14:02:35, time (data): 0.168 (0.004)] l_pix: 3.2141e-02 l_percep: 1.3012e+00 
+2024-12-12 16:32:15,444 INFO: [Decom..][epoch:166, iter:  10,000, lr:(2.000e-04,2.000e-04,)] [eta: 14:02:11, time (data): 0.171 (0.008)] l_pix: 2.4805e-02 l_percep: 1.1719e+00 
+2024-12-12 16:32:15,446 INFO: Saving models and training states.
+2024-12-12 16:32:19,251 INFO: Validation ValSet,		 # psnr: 24.7075	 # ssim: 0.8322
+2024-12-12 16:32:36,416 INFO: [Decom..][epoch:168, iter:  10,100, lr:(2.000e-04,2.000e-04,)] [eta: 14:03:36, time (data): 0.172 (0.009)] l_pix: 4.4140e-02 l_percep: 1.4691e+00 
+2024-12-12 16:32:53,290 INFO: [Decom..][epoch:169, iter:  10,200, lr:(2.000e-04,2.000e-04,)] [eta: 14:03:02, time (data): 0.170 (0.008)] l_pix: 3.0829e-02 l_percep: 1.2727e+00 
+2024-12-12 16:33:10,331 INFO: [Decom..][epoch:171, iter:  10,300, lr:(2.000e-04,2.000e-04,)] [eta: 14:02:33, time (data): 0.171 (0.009)] l_pix: 2.6194e-02 l_percep: 1.0313e+00 
+2024-12-12 16:33:27,525 INFO: [Decom..][epoch:173, iter:  10,400, lr:(2.000e-04,2.000e-04,)] [eta: 14:02:08, time (data): 0.172 (0.010)] l_pix: 3.2147e-02 l_percep: 1.0129e+00 
+2024-12-12 16:33:44,295 INFO: [Decom..][epoch:174, iter:  10,500, lr:(2.000e-04,2.000e-04,)] [eta: 14:01:32, time (data): 0.165 (0.003)] l_pix: 2.3959e-02 l_percep: 1.1533e+00 
+2024-12-12 16:34:01,586 INFO: [Decom..][epoch:176, iter:  10,600, lr:(2.000e-04,2.000e-04,)] [eta: 14:01:10, time (data): 0.170 (0.007)] l_pix: 3.7585e-02 l_percep: 1.2228e+00 
+2024-12-12 16:34:18,735 INFO: [Decom..][epoch:178, iter:  10,700, lr:(2.000e-04,2.000e-04,)] [eta: 14:00:45, time (data): 0.172 (0.010)] l_pix: 3.0083e-02 l_percep: 1.5533e+00 
+2024-12-12 16:34:35,577 INFO: [Decom..][epoch:179, iter:  10,800, lr:(2.000e-04,2.000e-04,)] [eta: 14:00:12, time (data): 0.170 (0.008)] l_pix: 2.5660e-02 l_percep: 1.0292e+00 
+2024-12-12 16:34:52,704 INFO: [Decom..][epoch:181, iter:  10,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:59:46, time (data): 0.172 (0.010)] l_pix: 2.7267e-02 l_percep: 8.9269e-01 
+2024-12-12 16:35:09,965 INFO: [Decom..][epoch:183, iter:  11,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:59:24, time (data): 0.172 (0.010)] l_pix: 2.4035e-02 l_percep: 1.1976e+00 
+2024-12-12 16:35:09,967 INFO: Saving models and training states.
+2024-12-12 16:35:13,594 INFO: Validation ValSet,		 # psnr: 24.4333	 # ssim: 0.8306
+2024-12-12 16:35:30,451 INFO: [Decom..][epoch:184, iter:  11,100, lr:(2.000e-04,2.000e-04,)] [eta: 14:00:26, time (data): 0.165 (0.003)] l_pix: 2.2431e-02 l_percep: 9.4794e-01 
+2024-12-12 16:35:47,608 INFO: [Decom..][epoch:186, iter:  11,200, lr:(2.000e-04,2.000e-04,)] [eta: 14:00:01, time (data): 0.169 (0.008)] l_pix: 3.1213e-02 l_percep: 1.0239e+00 
+2024-12-12 16:36:04,848 INFO: [Decom..][epoch:188, iter:  11,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:59:38, time (data): 0.173 (0.011)] l_pix: 2.3930e-02 l_percep: 1.1456e+00 
+2024-12-12 16:36:21,657 INFO: [Decom..][epoch:189, iter:  11,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:59:05, time (data): 0.170 (0.008)] l_pix: 3.2612e-02 l_percep: 1.5354e+00 
+2024-12-12 16:36:38,771 INFO: [Decom..][epoch:191, iter:  11,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:58:39, time (data): 0.172 (0.011)] l_pix: 2.5511e-02 l_percep: 1.0773e+00 
+2024-12-12 16:36:55,911 INFO: [Decom..][epoch:193, iter:  11,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:58:14, time (data): 0.172 (0.010)] l_pix: 3.1839e-02 l_percep: 1.3850e+00 
+2024-12-12 16:37:12,558 INFO: [Decom..][epoch:194, iter:  11,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:57:37, time (data): 0.163 (0.003)] l_pix: 2.3794e-02 l_percep: 1.3273e+00 
+2024-12-12 16:37:29,673 INFO: [Decom..][epoch:196, iter:  11,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:57:12, time (data): 0.169 (0.008)] l_pix: 3.1215e-02 l_percep: 1.3519e+00 
+2024-12-12 16:37:46,868 INFO: [Decom..][epoch:198, iter:  11,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:56:49, time (data): 0.176 (0.011)] l_pix: 2.3526e-02 l_percep: 1.1462e+00 
+2024-12-12 16:38:03,683 INFO: [Decom..][epoch:199, iter:  12,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:56:17, time (data): 0.170 (0.008)] l_pix: 2.7368e-02 l_percep: 1.1430e+00 
+2024-12-12 16:38:03,684 INFO: Saving models and training states.
+2024-12-12 16:38:07,309 INFO: Validation ValSet,		 # psnr: 24.6912	 # ssim: 0.8303
+2024-12-12 16:38:24,623 INFO: [Decom..][epoch:201, iter:  12,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:57:23, time (data): 0.174 (0.012)] l_pix: 2.4185e-02 l_percep: 1.1984e+00 
+2024-12-12 16:38:41,736 INFO: [Decom..][epoch:203, iter:  12,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:56:58, time (data): 0.172 (0.010)] l_pix: 2.4520e-02 l_percep: 1.0022e+00 
+2024-12-12 16:38:58,654 INFO: [Decom..][epoch:204, iter:  12,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:56:28, time (data): 0.166 (0.003)] l_pix: 2.9977e-02 l_percep: 1.1588e+00 
+2024-12-12 16:39:15,968 INFO: [Decom..][epoch:206, iter:  12,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:56:07, time (data): 0.171 (0.008)] l_pix: 3.5495e-02 l_percep: 1.2752e+00 
+2024-12-12 16:39:33,169 INFO: [Decom..][epoch:208, iter:  12,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:55:44, time (data): 0.175 (0.012)] l_pix: 2.4413e-02 l_percep: 1.0426e+00 
+2024-12-12 16:39:49,996 INFO: [Decom..][epoch:209, iter:  12,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:55:13, time (data): 0.170 (0.008)] l_pix: 2.5011e-02 l_percep: 1.1192e+00 
+2024-12-12 16:40:07,175 INFO: [Decom..][epoch:211, iter:  12,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:54:49, time (data): 0.166 (0.003)] l_pix: 2.2535e-02 l_percep: 8.1288e-01 
+2024-12-12 16:40:24,344 INFO: [Decom..][epoch:213, iter:  12,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:54:26, time (data): 0.170 (0.008)] l_pix: 2.7057e-02 l_percep: 1.1802e+00 
+2024-12-12 16:40:41,285 INFO: [Decom..][epoch:214, iter:  12,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:53:58, time (data): 0.167 (0.003)] l_pix: 2.7970e-02 l_percep: 1.1671e+00 
+2024-12-12 16:40:58,346 INFO: [Decom..][epoch:216, iter:  13,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:53:32, time (data): 0.170 (0.008)] l_pix: 3.0044e-02 l_percep: 1.1479e+00 
+2024-12-12 16:40:58,348 INFO: Saving models and training states.
+2024-12-12 16:41:01,989 INFO: Validation ValSet,		 # psnr: 24.0379	 # ssim: 0.8301
+2024-12-12 16:41:19,102 INFO: [Decom..][epoch:218, iter:  13,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:54:28, time (data): 0.173 (0.012)] l_pix: 2.9591e-02 l_percep: 9.7366e-01 
+2024-12-12 16:41:35,943 INFO: [Decom..][epoch:219, iter:  13,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:53:57, time (data): 0.169 (0.008)] l_pix: 2.5873e-02 l_percep: 1.3055e+00 
+2024-12-12 16:41:53,259 INFO: [Decom..][epoch:221, iter:  13,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:53:37, time (data): 0.169 (0.003)] l_pix: 2.5889e-02 l_percep: 1.0119e+00 
+2024-12-12 16:42:10,323 INFO: [Decom..][epoch:223, iter:  13,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:53:11, time (data): 0.170 (0.008)] l_pix: 3.8786e-02 l_percep: 9.8918e-01 
+2024-12-12 16:42:27,192 INFO: [Decom..][epoch:224, iter:  13,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:52:41, time (data): 0.164 (0.003)] l_pix: 3.2195e-02 l_percep: 1.4421e+00 
+2024-12-12 16:42:44,237 INFO: [Decom..][epoch:226, iter:  13,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:52:16, time (data): 0.169 (0.008)] l_pix: 1.9795e-02 l_percep: 7.3879e-01 
+2024-12-12 16:43:01,458 INFO: [Decom..][epoch:228, iter:  13,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:51:54, time (data): 0.179 (0.013)] l_pix: 3.4539e-02 l_percep: 1.0396e+00 
+2024-12-12 16:43:18,265 INFO: [Decom..][epoch:229, iter:  13,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:51:23, time (data): 0.171 (0.008)] l_pix: 2.7779e-02 l_percep: 1.1034e+00 
+2024-12-12 16:43:35,386 INFO: [Decom..][epoch:231, iter:  13,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:50:59, time (data): 0.164 (0.003)] l_pix: 2.5717e-02 l_percep: 1.2488e+00 
+2024-12-12 16:43:52,607 INFO: [Decom..][epoch:233, iter:  14,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:50:38, time (data): 0.170 (0.008)] l_pix: 2.7204e-02 l_percep: 1.0244e+00 
+2024-12-12 16:43:52,609 INFO: Saving models and training states.
+2024-12-12 16:43:56,278 INFO: Validation ValSet,		 # psnr: 25.0133	 # ssim: 0.8409
+2024-12-12 16:44:13,202 INFO: [Decom..][epoch:234, iter:  14,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:51:25, time (data): 0.167 (0.003)] l_pix: 2.5380e-02 l_percep: 1.2819e+00 
+2024-12-12 16:44:30,390 INFO: [Decom..][epoch:236, iter:  14,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:51:02, time (data): 0.171 (0.008)] l_pix: 2.3773e-02 l_percep: 1.0239e+00 
+2024-12-12 16:44:47,551 INFO: [Decom..][epoch:238, iter:  14,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:50:39, time (data): 0.176 (0.014)] l_pix: 2.7266e-02 l_percep: 1.4655e+00 
+2024-12-12 16:45:04,247 INFO: [Decom..][epoch:239, iter:  14,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:50:07, time (data): 0.169 (0.008)] l_pix: 2.1859e-02 l_percep: 1.0205e+00 
+2024-12-12 16:45:21,275 INFO: [Decom..][epoch:241, iter:  14,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:49:41, time (data): 0.163 (0.003)] l_pix: 2.5891e-02 l_percep: 1.1328e+00 
+2024-12-12 16:45:38,460 INFO: [Decom..][epoch:243, iter:  14,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:49:19, time (data): 0.170 (0.008)] l_pix: 2.4272e-02 l_percep: 9.9886e-01 
+2024-12-12 16:45:55,211 INFO: [Decom..][epoch:244, iter:  14,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:48:48, time (data): 0.165 (0.003)] l_pix: 3.6493e-02 l_percep: 1.0861e+00 
+2024-12-12 16:46:12,389 INFO: [Decom..][epoch:246, iter:  14,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:48:26, time (data): 0.170 (0.008)] l_pix: 2.2850e-02 l_percep: 8.9277e-01 
+2024-12-12 16:46:29,632 INFO: [Decom..][epoch:248, iter:  14,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:48:05, time (data): 0.179 (0.015)] l_pix: 2.7352e-02 l_percep: 8.1373e-01 
+2024-12-12 16:46:46,337 INFO: [Decom..][epoch:249, iter:  15,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:47:34, time (data): 0.170 (0.008)] l_pix: 3.2014e-02 l_percep: 1.2572e+00 
+2024-12-12 16:46:46,339 INFO: Saving models and training states.
+2024-12-12 16:46:49,820 INFO: Validation ValSet,		 # psnr: 24.1778	 # ssim: 0.8326
+2024-12-12 16:47:07,042 INFO: [Decom..][epoch:251, iter:  15,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:48:18, time (data): 0.163 (0.003)] l_pix: 2.1603e-02 l_percep: 1.1602e+00 
+2024-12-12 16:47:24,302 INFO: [Decom..][epoch:253, iter:  15,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:47:57, time (data): 0.171 (0.009)] l_pix: 2.7133e-02 l_percep: 1.2703e+00 
+2024-12-12 16:47:41,175 INFO: [Decom..][epoch:254, iter:  15,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:47:29, time (data): 0.164 (0.003)] l_pix: 2.5910e-02 l_percep: 1.1320e+00 
+2024-12-12 16:47:58,438 INFO: [Decom..][epoch:256, iter:  15,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:47:08, time (data): 0.171 (0.008)] l_pix: 2.8165e-02 l_percep: 1.2466e+00 
+2024-12-12 16:48:15,598 INFO: [Decom..][epoch:258, iter:  15,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:46:46, time (data): 0.182 (0.017)] l_pix: 3.1860e-02 l_percep: 1.0618e+00 
+2024-12-12 16:48:32,365 INFO: [Decom..][epoch:259, iter:  15,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:46:16, time (data): 0.170 (0.008)] l_pix: 3.0545e-02 l_percep: 1.1245e+00 
+2024-12-12 16:48:49,527 INFO: [Decom..][epoch:261, iter:  15,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:45:54, time (data): 0.168 (0.004)] l_pix: 2.2017e-02 l_percep: 9.9706e-01 
+2024-12-12 16:49:06,656 INFO: [Decom..][epoch:263, iter:  15,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:45:31, time (data): 0.171 (0.008)] l_pix: 2.9204e-02 l_percep: 1.1195e+00 
+2024-12-12 16:49:23,665 INFO: [Decom..][epoch:264, iter:  15,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:45:06, time (data): 0.165 (0.003)] l_pix: 2.0905e-02 l_percep: 7.8839e-01 
+2024-12-12 16:49:40,731 INFO: [Decom..][epoch:266, iter:  16,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:44:42, time (data): 0.170 (0.008)] l_pix: 2.7663e-02 l_percep: 9.9649e-01 
+2024-12-12 16:49:40,732 INFO: Saving models and training states.
+2024-12-12 16:49:44,466 INFO: Validation ValSet,		 # psnr: 23.2965	 # ssim: 0.8313
+2024-12-12 16:50:01,732 INFO: [Decom..][epoch:268, iter:  16,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:45:28, time (data): 0.181 (0.020)] l_pix: 2.6537e-02 l_percep: 1.1609e+00 
+2024-12-12 16:50:18,517 INFO: [Decom..][epoch:269, iter:  16,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:44:59, time (data): 0.170 (0.009)] l_pix: 3.0561e-02 l_percep: 1.1554e+00 
+2024-12-12 16:50:35,644 INFO: [Decom..][epoch:271, iter:  16,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:44:36, time (data): 0.163 (0.003)] l_pix: 2.8815e-02 l_percep: 1.1136e+00 
+2024-12-12 16:50:52,657 INFO: [Decom..][epoch:273, iter:  16,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:44:11, time (data): 0.169 (0.008)] l_pix: 2.5780e-02 l_percep: 1.1531e+00 
+2024-12-12 16:51:09,374 INFO: [Decom..][epoch:274, iter:  16,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:43:41, time (data): 0.164 (0.003)] l_pix: 2.9986e-02 l_percep: 1.2839e+00 
+2024-12-12 16:51:26,442 INFO: [Decom..][epoch:276, iter:  16,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:43:18, time (data): 0.170 (0.009)] l_pix: 2.4230e-02 l_percep: 1.0030e+00 
+2024-12-12 16:51:43,533 INFO: [Decom..][epoch:278, iter:  16,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:42:55, time (data): 0.164 (0.003)] l_pix: 2.7019e-02 l_percep: 1.1337e+00 
+2024-12-12 16:52:00,200 INFO: [Decom..][epoch:279, iter:  16,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:42:24, time (data): 0.166 (0.006)] l_pix: 2.7143e-02 l_percep: 1.2952e+00 
+2024-12-12 16:52:17,221 INFO: [Decom..][epoch:281, iter:  16,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:42:00, time (data): 0.165 (0.003)] l_pix: 2.3686e-02 l_percep: 1.1565e+00 
+2024-12-12 16:52:34,226 INFO: [Decom..][epoch:283, iter:  17,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:41:36, time (data): 0.169 (0.009)] l_pix: 2.9547e-02 l_percep: 1.1250e+00 
+2024-12-12 16:52:34,227 INFO: Saving models and training states.
+2024-12-12 16:52:37,901 INFO: Validation ValSet,		 # psnr: 24.0826	 # ssim: 0.8277
+2024-12-12 16:52:54,735 INFO: [Decom..][epoch:284, iter:  17,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:42:09, time (data): 0.169 (0.003)] l_pix: 3.1563e-02 l_percep: 1.3452e+00 
+2024-12-12 16:53:11,895 INFO: [Decom..][epoch:286, iter:  17,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:41:47, time (data): 0.171 (0.009)] l_pix: 2.1055e-02 l_percep: 9.4997e-01 
+2024-12-12 16:53:29,003 INFO: [Decom..][epoch:288, iter:  17,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:41:25, time (data): 0.163 (0.003)] l_pix: 2.4094e-02 l_percep: 1.0898e+00 
+2024-12-12 16:53:45,863 INFO: [Decom..][epoch:289, iter:  17,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:40:58, time (data): 0.168 (0.006)] l_pix: 2.6375e-02 l_percep: 1.2176e+00 
+2024-12-12 16:54:03,092 INFO: [Decom..][epoch:291, iter:  17,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:40:37, time (data): 0.164 (0.003)] l_pix: 2.4094e-02 l_percep: 1.1244e+00 
+2024-12-12 16:54:20,289 INFO: [Decom..][epoch:293, iter:  17,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:40:16, time (data): 0.171 (0.010)] l_pix: 2.1724e-02 l_percep: 8.3177e-01 
+2024-12-12 16:54:37,035 INFO: [Decom..][epoch:294, iter:  17,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:39:48, time (data): 0.164 (0.003)] l_pix: 2.1375e-02 l_percep: 9.2603e-01 
+2024-12-12 16:54:54,313 INFO: [Decom..][epoch:296, iter:  17,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:39:28, time (data): 0.172 (0.009)] l_pix: 2.5017e-02 l_percep: 8.8679e-01 
+2024-12-12 16:55:11,464 INFO: [Decom..][epoch:298, iter:  17,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:39:06, time (data): 0.170 (0.003)] l_pix: 2.5946e-02 l_percep: 1.1590e+00 
+2024-12-12 16:55:28,532 INFO: [Decom..][epoch:299, iter:  18,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:38:43, time (data): 0.171 (0.006)] l_pix: 2.7892e-02 l_percep: 1.2000e+00 
+2024-12-12 16:55:28,534 INFO: Saving models and training states.
+2024-12-12 16:55:32,174 INFO: Validation ValSet,		 # psnr: 24.5197	 # ssim: 0.8348
+2024-12-12 16:55:49,357 INFO: [Decom..][epoch:301, iter:  18,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:39:19, time (data): 0.165 (0.003)] l_pix: 3.3366e-02 l_percep: 1.0602e+00 
+2024-12-12 16:56:06,556 INFO: [Decom..][epoch:303, iter:  18,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:38:58, time (data): 0.171 (0.009)] l_pix: 2.0943e-02 l_percep: 1.0373e+00 
+2024-12-12 16:56:23,468 INFO: [Decom..][epoch:304, iter:  18,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:38:32, time (data): 0.163 (0.003)] l_pix: 2.7386e-02 l_percep: 1.3543e+00 
+2024-12-12 16:56:40,837 INFO: [Decom..][epoch:306, iter:  18,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:38:14, time (data): 0.173 (0.009)] l_pix: 2.9674e-02 l_percep: 9.2460e-01 
+2024-12-12 16:56:58,050 INFO: [Decom..][epoch:308, iter:  18,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:37:53, time (data): 0.165 (0.003)] l_pix: 2.4046e-02 l_percep: 1.0425e+00 
+2024-12-12 16:57:15,078 INFO: [Decom..][epoch:309, iter:  18,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:37:29, time (data): 0.170 (0.007)] l_pix: 3.3091e-02 l_percep: 1.1903e+00 
+2024-12-12 16:57:32,219 INFO: [Decom..][epoch:311, iter:  18,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:37:08, time (data): 0.165 (0.003)] l_pix: 2.7173e-02 l_percep: 1.1504e+00 
+2024-12-12 16:57:49,259 INFO: [Decom..][epoch:313, iter:  18,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:36:44, time (data): 0.170 (0.009)] l_pix: 2.4026e-02 l_percep: 8.6002e-01 
+2024-12-12 16:58:05,993 INFO: [Decom..][epoch:314, iter:  18,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:36:17, time (data): 0.176 (0.003)] l_pix: 3.1989e-02 l_percep: 1.1623e+00 
+2024-12-12 16:58:23,189 INFO: [Decom..][epoch:316, iter:  19,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:35:56, time (data): 0.172 (0.009)] l_pix: 2.3091e-02 l_percep: 8.8026e-01 
+2024-12-12 16:58:23,190 INFO: Saving models and training states.
+2024-12-12 16:58:26,672 INFO: Validation ValSet,		 # psnr: 24.6591	 # ssim: 0.8376
+2024-12-12 16:58:43,862 INFO: [Decom..][epoch:318, iter:  19,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:36:26, time (data): 0.169 (0.003)] l_pix: 2.9808e-02 l_percep: 1.3824e+00 
+2024-12-12 16:59:00,597 INFO: [Decom..][epoch:319, iter:  19,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:35:59, time (data): 0.167 (0.006)] l_pix: 3.0346e-02 l_percep: 1.3150e+00 
+2024-12-12 16:59:17,670 INFO: [Decom..][epoch:321, iter:  19,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:35:36, time (data): 0.169 (0.004)] l_pix: 2.4614e-02 l_percep: 1.1729e+00 
+2024-12-12 16:59:35,094 INFO: [Decom..][epoch:323, iter:  19,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:35:18, time (data): 0.174 (0.011)] l_pix: 1.8993e-02 l_percep: 9.1919e-01 
+2024-12-12 16:59:51,833 INFO: [Decom..][epoch:324, iter:  19,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:34:51, time (data): 0.167 (0.003)] l_pix: 2.2342e-02 l_percep: 9.7811e-01 
+2024-12-12 17:00:09,118 INFO: [Decom..][epoch:326, iter:  19,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:34:31, time (data): 0.173 (0.010)] l_pix: 2.4913e-02 l_percep: 1.0622e+00 
+2024-12-12 17:00:26,279 INFO: [Decom..][epoch:328, iter:  19,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:34:10, time (data): 0.168 (0.003)] l_pix: 3.1315e-02 l_percep: 1.1614e+00 
+2024-12-12 17:00:43,130 INFO: [Decom..][epoch:329, iter:  19,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:33:44, time (data): 0.168 (0.007)] l_pix: 2.8250e-02 l_percep: 1.3453e+00 
+2024-12-12 17:01:00,324 INFO: [Decom..][epoch:331, iter:  19,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:33:24, time (data): 0.181 (0.003)] l_pix: 2.6881e-02 l_percep: 9.0887e-01 
+2024-12-12 17:01:17,358 INFO: [Decom..][epoch:333, iter:  20,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:33:01, time (data): 0.170 (0.010)] l_pix: 2.4984e-02 l_percep: 9.6311e-01 
+2024-12-12 17:01:17,360 INFO: Saving models and training states.
+2024-12-12 17:01:21,042 INFO: Validation ValSet,		 # psnr: 24.2945	 # ssim: 0.8314
+2024-12-12 17:01:37,791 INFO: [Decom..][epoch:334, iter:  20,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:33:25, time (data): 0.169 (0.008)] l_pix: 3.1190e-02 l_percep: 1.2262e+00 
+2024-12-12 17:01:54,903 INFO: [Decom..][epoch:336, iter:  20,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:33:03, time (data): 0.171 (0.009)] l_pix: 1.9409e-02 l_percep: 9.5225e-01 
+2024-12-12 17:02:11,949 INFO: [Decom..][epoch:338, iter:  20,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:32:41, time (data): 0.171 (0.009)] l_pix: 2.9554e-02 l_percep: 1.1173e+00 
+2024-12-12 17:02:28,720 INFO: [Decom..][epoch:339, iter:  20,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:32:14, time (data): 0.168 (0.006)] l_pix: 3.4099e-02 l_percep: 1.0630e+00 
+2024-12-12 17:02:45,900 INFO: [Decom..][epoch:341, iter:  20,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:31:53, time (data): 0.170 (0.008)] l_pix: 2.4569e-02 l_percep: 9.8855e-01 
+2024-12-12 17:03:03,101 INFO: [Decom..][epoch:343, iter:  20,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:31:33, time (data): 0.172 (0.010)] l_pix: 2.5020e-02 l_percep: 1.0598e+00 
+2024-12-12 17:03:19,771 INFO: [Decom..][epoch:344, iter:  20,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:31:05, time (data): 0.169 (0.008)] l_pix: 2.3794e-02 l_percep: 1.0976e+00 
+2024-12-12 17:03:36,948 INFO: [Decom..][epoch:346, iter:  20,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:30:44, time (data): 0.168 (0.007)] l_pix: 2.0918e-02 l_percep: 9.9044e-01 
+2024-12-12 17:03:54,049 INFO: [Decom..][epoch:348, iter:  20,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:30:23, time (data): 0.170 (0.008)] l_pix: 2.3257e-02 l_percep: 1.1056e+00 
+2024-12-12 17:04:11,117 INFO: [Decom..][epoch:349, iter:  21,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:30:01, time (data): 0.171 (0.007)] l_pix: 3.1560e-02 l_percep: 9.7717e-01 
+2024-12-12 17:04:11,119 INFO: Saving models and training states.
+2024-12-12 17:04:14,759 INFO: Validation ValSet,		 # psnr: 23.8110	 # ssim: 0.8259
+2024-12-12 17:04:31,951 INFO: [Decom..][epoch:351, iter:  21,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:30:28, time (data): 0.171 (0.008)] l_pix: 2.3792e-02 l_percep: 1.0604e+00 
+2024-12-12 17:04:49,225 INFO: [Decom..][epoch:353, iter:  21,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:30:09, time (data): 0.173 (0.010)] l_pix: 2.0029e-02 l_percep: 1.0119e+00 
+2024-12-12 17:05:06,285 INFO: [Decom..][epoch:354, iter:  21,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:29:46, time (data): 0.172 (0.008)] l_pix: 2.8765e-02 l_percep: 1.0396e+00 
+2024-12-12 17:05:23,483 INFO: [Decom..][epoch:356, iter:  21,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:29:26, time (data): 0.168 (0.007)] l_pix: 2.5769e-02 l_percep: 1.0469e+00 
+2024-12-12 17:05:40,547 INFO: [Decom..][epoch:358, iter:  21,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:29:04, time (data): 0.170 (0.008)] l_pix: 2.4261e-02 l_percep: 1.1975e+00 
+2024-12-12 17:05:57,389 INFO: [Decom..][epoch:359, iter:  21,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:28:39, time (data): 0.168 (0.007)] l_pix: 2.8321e-02 l_percep: 1.2368e+00 
+2024-12-12 17:06:14,793 INFO: [Decom..][epoch:361, iter:  21,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:28:21, time (data): 0.171 (0.008)] l_pix: 2.8347e-02 l_percep: 1.1555e+00 
+2024-12-12 17:06:32,107 INFO: [Decom..][epoch:363, iter:  21,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:28:02, time (data): 0.174 (0.010)] l_pix: 2.3662e-02 l_percep: 1.1108e+00 
+2024-12-12 17:06:48,846 INFO: [Decom..][epoch:364, iter:  21,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:27:36, time (data): 0.170 (0.008)] l_pix: 3.2098e-02 l_percep: 1.4374e+00 
+2024-12-12 17:07:06,107 INFO: [Decom..][epoch:366, iter:  22,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:27:16, time (data): 0.169 (0.007)] l_pix: 2.4084e-02 l_percep: 9.3858e-01 
+2024-12-12 17:07:06,108 INFO: Saving models and training states.
+2024-12-12 17:07:09,697 INFO: Validation ValSet,		 # psnr: 23.8585	 # ssim: 0.8300
+2024-12-12 17:07:26,910 INFO: [Decom..][epoch:368, iter:  22,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:27:41, time (data): 0.171 (0.008)] l_pix: 2.2005e-02 l_percep: 8.7738e-01 
+2024-12-12 17:07:43,728 INFO: [Decom..][epoch:369, iter:  22,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:27:16, time (data): 0.169 (0.007)] l_pix: 2.7870e-02 l_percep: 1.0339e+00 
+2024-12-12 17:08:00,842 INFO: [Decom..][epoch:371, iter:  22,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:26:55, time (data): 0.170 (0.009)] l_pix: 3.3659e-02 l_percep: 1.0986e+00 
+2024-12-12 17:08:17,977 INFO: [Decom..][epoch:373, iter:  22,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:26:34, time (data): 0.172 (0.010)] l_pix: 2.6455e-02 l_percep: 1.1694e+00 
+2024-12-12 17:08:34,804 INFO: [Decom..][epoch:374, iter:  22,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:26:09, time (data): 0.170 (0.008)] l_pix: 2.5186e-02 l_percep: 7.9827e-01 
+2024-12-12 17:08:52,002 INFO: [Decom..][epoch:376, iter:  22,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:25:48, time (data): 0.169 (0.007)] l_pix: 2.5289e-02 l_percep: 1.0917e+00 
+2024-12-12 17:09:09,148 INFO: [Decom..][epoch:378, iter:  22,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:25:28, time (data): 0.170 (0.008)] l_pix: 1.9858e-02 l_percep: 1.0489e+00 
+2024-12-12 17:09:25,928 INFO: [Decom..][epoch:379, iter:  22,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:25:02, time (data): 0.168 (0.007)] l_pix: 3.6497e-02 l_percep: 1.0391e+00 
+2024-12-12 17:09:43,036 INFO: [Decom..][epoch:381, iter:  22,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:24:41, time (data): 0.170 (0.008)] l_pix: 2.9788e-02 l_percep: 1.1633e+00 
+2024-12-12 17:10:00,230 INFO: [Decom..][epoch:383, iter:  23,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:24:21, time (data): 0.173 (0.011)] l_pix: 2.2757e-02 l_percep: 1.0377e+00 
+2024-12-12 17:10:00,232 INFO: Saving models and training states.
+2024-12-12 17:10:03,977 INFO: Validation ValSet,		 # psnr: 23.3759	 # ssim: 0.8260
+2024-12-12 17:10:20,758 INFO: [Decom..][epoch:384, iter:  23,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:24:41, time (data): 0.170 (0.008)] l_pix: 2.6037e-02 l_percep: 9.5946e-01 
+2024-12-12 17:10:37,906 INFO: [Decom..][epoch:386, iter:  23,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:24:20, time (data): 0.169 (0.007)] l_pix: 2.4192e-02 l_percep: 1.0876e+00 
+2024-12-12 17:10:55,062 INFO: [Decom..][epoch:388, iter:  23,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:23:59, time (data): 0.170 (0.009)] l_pix: 3.0844e-02 l_percep: 1.2047e+00 
+2024-12-12 17:11:11,824 INFO: [Decom..][epoch:389, iter:  23,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:23:34, time (data): 0.169 (0.007)] l_pix: 2.6657e-02 l_percep: 1.1622e+00 
+2024-12-12 17:11:29,031 INFO: [Decom..][epoch:391, iter:  23,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:23:14, time (data): 0.170 (0.009)] l_pix: 3.1377e-02 l_percep: 9.6166e-01 
+2024-12-12 17:11:46,365 INFO: [Decom..][epoch:393, iter:  23,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:22:55, time (data): 0.174 (0.011)] l_pix: 2.8897e-02 l_percep: 7.9209e-01 
+2024-12-12 17:12:03,250 INFO: [Decom..][epoch:394, iter:  23,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:22:31, time (data): 0.171 (0.008)] l_pix: 2.2424e-02 l_percep: 9.3440e-01 
+2024-12-12 17:12:20,485 INFO: [Decom..][epoch:396, iter:  23,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:22:12, time (data): 0.170 (0.007)] l_pix: 2.3123e-02 l_percep: 1.0920e+00 
+2024-12-12 17:12:37,727 INFO: [Decom..][epoch:398, iter:  23,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:21:52, time (data): 0.171 (0.009)] l_pix: 2.3004e-02 l_percep: 7.9276e-01 
+2024-12-12 17:12:54,548 INFO: [Decom..][epoch:399, iter:  24,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:21:28, time (data): 0.168 (0.007)] l_pix: 2.1339e-02 l_percep: 1.1012e+00 
+2024-12-12 17:12:54,550 INFO: Saving models and training states.
+2024-12-12 17:12:58,261 INFO: Validation ValSet,		 # psnr: 24.2951	 # ssim: 0.8380
+2024-12-12 17:13:15,414 INFO: [Decom..][epoch:401, iter:  24,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:21:50, time (data): 0.170 (0.008)] l_pix: 2.6759e-02 l_percep: 1.1248e+00 
+2024-12-12 17:13:32,435 INFO: [Decom..][epoch:403, iter:  24,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:21:27, time (data): 0.172 (0.011)] l_pix: 2.5951e-02 l_percep: 1.0057e+00 
+2024-12-12 17:13:49,233 INFO: [Decom..][epoch:404, iter:  24,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:21:03, time (data): 0.170 (0.008)] l_pix: 2.7562e-02 l_percep: 1.0447e+00 
+2024-12-12 17:14:06,426 INFO: [Decom..][epoch:406, iter:  24,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:20:43, time (data): 0.169 (0.007)] l_pix: 2.3523e-02 l_percep: 1.1615e+00 
+2024-12-12 17:14:23,657 INFO: [Decom..][epoch:408, iter:  24,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:20:23, time (data): 0.171 (0.008)] l_pix: 2.6707e-02 l_percep: 1.0578e+00 
+2024-12-12 17:14:40,296 INFO: [Decom..][epoch:409, iter:  24,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:19:57, time (data): 0.167 (0.007)] l_pix: 2.4817e-02 l_percep: 1.1799e+00 
+2024-12-12 17:14:57,313 INFO: [Decom..][epoch:411, iter:  24,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:19:35, time (data): 0.169 (0.008)] l_pix: 1.8443e-02 l_percep: 9.2940e-01 
+2024-12-12 17:15:14,361 INFO: [Decom..][epoch:413, iter:  24,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:19:13, time (data): 0.168 (0.007)] l_pix: 2.3925e-02 l_percep: 1.2100e+00 
+2024-12-12 17:15:31,122 INFO: [Decom..][epoch:414, iter:  24,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:18:48, time (data): 0.168 (0.007)] l_pix: 2.7485e-02 l_percep: 1.1041e+00 
+2024-12-12 17:15:48,150 INFO: [Decom..][epoch:416, iter:  25,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:18:26, time (data): 0.168 (0.007)] l_pix: 2.3635e-02 l_percep: 1.0451e+00 
+2024-12-12 17:15:48,152 INFO: Saving models and training states.
+2024-12-12 17:15:51,697 INFO: Validation ValSet,		 # psnr: 23.6425	 # ssim: 0.8310
+2024-12-12 17:16:08,805 INFO: [Decom..][epoch:418, iter:  25,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:18:44, time (data): 0.170 (0.009)] l_pix: 3.0524e-02 l_percep: 9.5705e-01 
+2024-12-12 17:16:25,544 INFO: [Decom..][epoch:419, iter:  25,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:18:19, time (data): 0.169 (0.007)] l_pix: 2.8835e-02 l_percep: 1.1036e+00 
+2024-12-12 17:16:42,614 INFO: [Decom..][epoch:421, iter:  25,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:17:58, time (data): 0.170 (0.008)] l_pix: 2.3670e-02 l_percep: 1.0183e+00 
+2024-12-12 17:16:59,634 INFO: [Decom..][epoch:423, iter:  25,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:17:36, time (data): 0.168 (0.007)] l_pix: 3.0873e-02 l_percep: 1.0394e+00 
+2024-12-12 17:17:16,385 INFO: [Decom..][epoch:424, iter:  25,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:17:12, time (data): 0.168 (0.007)] l_pix: 1.9197e-02 l_percep: 1.0430e+00 
+2024-12-12 17:17:33,766 INFO: [Decom..][epoch:426, iter:  25,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:16:54, time (data): 0.171 (0.008)] l_pix: 2.2113e-02 l_percep: 8.9511e-01 
+2024-12-12 17:17:50,919 INFO: [Decom..][epoch:428, iter:  25,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:16:33, time (data): 0.171 (0.009)] l_pix: 2.1366e-02 l_percep: 1.0128e+00 
+2024-12-12 17:18:07,786 INFO: [Decom..][epoch:429, iter:  25,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:16:10, time (data): 0.170 (0.008)] l_pix: 2.4702e-02 l_percep: 8.1306e-01 
+2024-12-12 17:18:25,287 INFO: [Decom..][epoch:431, iter:  25,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:15:53, time (data): 0.173 (0.009)] l_pix: 2.4645e-02 l_percep: 1.0325e+00 
+2024-12-12 17:18:42,654 INFO: [Decom..][epoch:433, iter:  26,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:15:35, time (data): 0.172 (0.008)] l_pix: 2.4552e-02 l_percep: 1.1438e+00 
+2024-12-12 17:18:42,656 INFO: Saving models and training states.
+2024-12-12 17:18:46,311 INFO: Validation ValSet,		 # psnr: 23.6979	 # ssim: 0.8298
+2024-12-12 17:19:03,262 INFO: [Decom..][epoch:434, iter:  26,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:15:51, time (data): 0.171 (0.007)] l_pix: 2.7989e-02 l_percep: 8.6268e-01 
+2024-12-12 17:19:20,630 INFO: [Decom..][epoch:436, iter:  26,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:15:33, time (data): 0.172 (0.008)] l_pix: 2.2833e-02 l_percep: 1.0344e+00 
+2024-12-12 17:19:37,930 INFO: [Decom..][epoch:438, iter:  26,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:15:14, time (data): 0.173 (0.009)] l_pix: 2.3323e-02 l_percep: 1.1597e+00 
+2024-12-12 17:19:54,711 INFO: [Decom..][epoch:439, iter:  26,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:14:50, time (data): 0.169 (0.008)] l_pix: 3.1037e-02 l_percep: 9.9883e-01 
+2024-12-12 17:20:11,915 INFO: [Decom..][epoch:441, iter:  26,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:14:30, time (data): 0.171 (0.009)] l_pix: 2.3499e-02 l_percep: 1.3461e+00 
+2024-12-12 17:20:29,079 INFO: [Decom..][epoch:443, iter:  26,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:14:10, time (data): 0.169 (0.008)] l_pix: 2.4319e-02 l_percep: 8.9770e-01 
+2024-12-12 17:20:45,819 INFO: [Decom..][epoch:444, iter:  26,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:13:46, time (data): 0.168 (0.007)] l_pix: 3.3107e-02 l_percep: 1.2151e+00 
+2024-12-12 17:21:03,087 INFO: [Decom..][epoch:446, iter:  26,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:13:27, time (data): 0.171 (0.009)] l_pix: 2.6972e-02 l_percep: 1.0207e+00 
+2024-12-12 17:21:20,353 INFO: [Decom..][epoch:448, iter:  26,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:13:08, time (data): 0.172 (0.010)] l_pix: 2.5286e-02 l_percep: 1.0895e+00 
+2024-12-12 17:21:37,260 INFO: [Decom..][epoch:449, iter:  27,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:12:45, time (data): 0.171 (0.009)] l_pix: 2.4833e-02 l_percep: 1.2681e+00 
+2024-12-12 17:21:37,262 INFO: Saving models and training states.
+2024-12-12 17:21:41,247 INFO: Validation ValSet,		 # psnr: 23.0465	 # ssim: 0.8313
+2024-12-12 17:21:58,663 INFO: [Decom..][epoch:451, iter:  27,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:13:08, time (data): 0.173 (0.009)] l_pix: 2.3045e-02 l_percep: 9.5282e-01 
+2024-12-12 17:22:15,862 INFO: [Decom..][epoch:453, iter:  27,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:12:48, time (data): 0.170 (0.008)] l_pix: 2.9168e-02 l_percep: 1.0044e+00 
+2024-12-12 17:22:32,820 INFO: [Decom..][epoch:454, iter:  27,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:12:26, time (data): 0.170 (0.007)] l_pix: 2.5566e-02 l_percep: 1.0501e+00 
+2024-12-12 17:22:50,437 INFO: [Decom..][epoch:456, iter:  27,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:12:10, time (data): 0.174 (0.009)] l_pix: 4.0523e-02 l_percep: 1.0542e+00 
+2024-12-12 17:23:07,721 INFO: [Decom..][epoch:458, iter:  27,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:11:51, time (data): 0.173 (0.009)] l_pix: 2.1954e-02 l_percep: 9.8984e-01 
+2024-12-12 17:23:24,451 INFO: [Decom..][epoch:459, iter:  27,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:11:27, time (data): 0.169 (0.008)] l_pix: 2.2822e-02 l_percep: 9.7741e-01 
+2024-12-12 17:23:41,782 INFO: [Decom..][epoch:461, iter:  27,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:11:08, time (data): 0.172 (0.009)] l_pix: 2.5288e-02 l_percep: 8.8455e-01 
+2024-12-12 17:23:58,855 INFO: [Decom..][epoch:463, iter:  27,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:10:47, time (data): 0.170 (0.008)] l_pix: 2.4645e-02 l_percep: 1.0746e+00 
+2024-12-12 17:24:15,562 INFO: [Decom..][epoch:464, iter:  27,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:10:23, time (data): 0.168 (0.007)] l_pix: 2.4366e-02 l_percep: 8.6783e-01 
+2024-12-12 17:24:32,697 INFO: [Decom..][epoch:466, iter:  28,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:10:02, time (data): 0.170 (0.008)] l_pix: 2.6833e-02 l_percep: 1.0219e+00 
+2024-12-12 17:24:32,699 INFO: Saving models and training states.
+2024-12-12 17:24:36,244 INFO: Validation ValSet,		 # psnr: 23.2539	 # ssim: 0.8287
+2024-12-12 17:24:53,422 INFO: [Decom..][epoch:468, iter:  28,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:10:17, time (data): 0.171 (0.009)] l_pix: 2.4037e-02 l_percep: 1.2124e+00 
+2024-12-12 17:25:10,182 INFO: [Decom..][epoch:469, iter:  28,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:09:53, time (data): 0.169 (0.009)] l_pix: 2.4297e-02 l_percep: 9.2402e-01 
+2024-12-12 17:25:27,416 INFO: [Decom..][epoch:471, iter:  28,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:09:34, time (data): 0.171 (0.010)] l_pix: 2.0733e-02 l_percep: 9.3193e-01 
+2024-12-12 17:25:44,517 INFO: [Decom..][epoch:473, iter:  28,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:09:13, time (data): 0.170 (0.009)] l_pix: 2.3747e-02 l_percep: 8.6678e-01 
+2024-12-12 17:26:01,376 INFO: [Decom..][epoch:474, iter:  28,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:08:50, time (data): 0.169 (0.008)] l_pix: 2.8511e-02 l_percep: 1.1601e+00 
+2024-12-12 17:26:18,760 INFO: [Decom..][epoch:476, iter:  28,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:08:32, time (data): 0.173 (0.009)] l_pix: 1.8541e-02 l_percep: 1.1800e+00 
+2024-12-12 17:26:35,962 INFO: [Decom..][epoch:478, iter:  28,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:08:13, time (data): 0.172 (0.009)] l_pix: 1.8649e-02 l_percep: 9.6459e-01 
+2024-12-12 17:26:52,635 INFO: [Decom..][epoch:479, iter:  28,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:07:48, time (data): 0.164 (0.003)] l_pix: 2.2025e-02 l_percep: 1.0317e+00 
+2024-12-12 17:27:09,685 INFO: [Decom..][epoch:481, iter:  28,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:07:27, time (data): 0.168 (0.007)] l_pix: 2.3201e-02 l_percep: 9.1265e-01 
+2024-12-12 17:27:26,819 INFO: [Decom..][epoch:483, iter:  29,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:07:07, time (data): 0.170 (0.009)] l_pix: 2.4424e-02 l_percep: 1.0299e+00 
+2024-12-12 17:27:26,821 INFO: Saving models and training states.
+2024-12-12 17:27:30,480 INFO: Validation ValSet,		 # psnr: 23.4054	 # ssim: 0.8229
+2024-12-12 17:27:47,339 INFO: [Decom..][epoch:484, iter:  29,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:07:18, time (data): 0.169 (0.007)] l_pix: 2.3222e-02 l_percep: 8.1711e-01 
+2024-12-12 17:28:04,385 INFO: [Decom..][epoch:486, iter:  29,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:06:57, time (data): 0.170 (0.009)] l_pix: 2.6058e-02 l_percep: 7.9391e-01 
+2024-12-12 17:28:21,402 INFO: [Decom..][epoch:488, iter:  29,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:06:36, time (data): 0.170 (0.009)] l_pix: 2.6642e-02 l_percep: 8.8269e-01 
+2024-12-12 17:28:38,031 INFO: [Decom..][epoch:489, iter:  29,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:06:11, time (data): 0.163 (0.003)] l_pix: 2.6020e-02 l_percep: 1.0759e+00 
+2024-12-12 17:28:55,203 INFO: [Decom..][epoch:491, iter:  29,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:05:51, time (data): 0.169 (0.007)] l_pix: 2.4586e-02 l_percep: 1.1183e+00 
+2024-12-12 17:29:12,309 INFO: [Decom..][epoch:493, iter:  29,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:05:31, time (data): 0.171 (0.009)] l_pix: 2.4374e-02 l_percep: 1.0598e+00 
+2024-12-12 17:29:29,117 INFO: [Decom..][epoch:494, iter:  29,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:05:08, time (data): 0.169 (0.007)] l_pix: 2.4830e-02 l_percep: 1.2967e+00 
+2024-12-12 17:29:46,313 INFO: [Decom..][epoch:496, iter:  29,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:04:48, time (data): 0.171 (0.009)] l_pix: 2.3373e-02 l_percep: 1.1616e+00 
+2024-12-12 17:30:03,563 INFO: [Decom..][epoch:498, iter:  29,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:04:29, time (data): 0.172 (0.010)] l_pix: 2.9014e-02 l_percep: 1.1288e+00 
+2024-12-12 17:30:20,315 INFO: [Decom..][epoch:499, iter:  30,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:04:06, time (data): 0.164 (0.003)] l_pix: 2.7601e-02 l_percep: 1.0970e+00 
+2024-12-12 17:30:20,317 INFO: Saving models and training states.
+2024-12-12 17:30:23,936 INFO: Validation ValSet,		 # psnr: 23.8839	 # ssim: 0.8250
+2024-12-12 17:30:41,138 INFO: [Decom..][epoch:501, iter:  30,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:04:19, time (data): 0.169 (0.008)] l_pix: 2.3824e-02 l_percep: 1.0877e+00 
+2024-12-12 17:30:58,488 INFO: [Decom..][epoch:503, iter:  30,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:04:00, time (data): 0.176 (0.010)] l_pix: 2.3429e-02 l_percep: 8.5676e-01 
+2024-12-12 17:31:15,455 INFO: [Decom..][epoch:504, iter:  30,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:03:39, time (data): 0.172 (0.008)] l_pix: 2.3806e-02 l_percep: 1.0396e+00 
+2024-12-12 17:31:32,793 INFO: [Decom..][epoch:506, iter:  30,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:03:20, time (data): 0.176 (0.010)] l_pix: 2.0704e-02 l_percep: 9.7608e-01 
+2024-12-12 17:31:49,831 INFO: [Decom..][epoch:508, iter:  30,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:03:00, time (data): 0.172 (0.010)] l_pix: 2.9997e-02 l_percep: 1.0017e+00 
+2024-12-12 17:32:06,647 INFO: [Decom..][epoch:509, iter:  30,600, lr:(2.000e-04,2.000e-04,)] [eta: 13:02:37, time (data): 0.163 (0.003)] l_pix: 2.0675e-02 l_percep: 1.0769e+00 
+2024-12-12 17:32:24,112 INFO: [Decom..][epoch:511, iter:  30,700, lr:(2.000e-04,2.000e-04,)] [eta: 13:02:20, time (data): 0.171 (0.007)] l_pix: 2.5041e-02 l_percep: 1.0760e+00 
+2024-12-12 17:32:41,570 INFO: [Decom..][epoch:513, iter:  30,800, lr:(2.000e-04,2.000e-04,)] [eta: 13:02:02, time (data): 0.174 (0.011)] l_pix: 2.2569e-02 l_percep: 9.2282e-01 
+2024-12-12 17:32:58,332 INFO: [Decom..][epoch:514, iter:  30,900, lr:(2.000e-04,2.000e-04,)] [eta: 13:01:39, time (data): 0.170 (0.008)] l_pix: 2.8650e-02 l_percep: 8.4027e-01 
+2024-12-12 17:33:15,454 INFO: [Decom..][epoch:516, iter:  31,000, lr:(2.000e-04,2.000e-04,)] [eta: 13:01:19, time (data): 0.172 (0.010)] l_pix: 1.6864e-02 l_percep: 6.5691e-01 
+2024-12-12 17:33:15,455 INFO: Saving models and training states.
+2024-12-12 17:33:18,992 INFO: Validation ValSet,		 # psnr: 23.2828	 # ssim: 0.8256
+2024-12-12 17:33:36,084 INFO: [Decom..][epoch:518, iter:  31,100, lr:(2.000e-04,2.000e-04,)] [eta: 13:01:29, time (data): 0.171 (0.009)] l_pix: 1.9935e-02 l_percep: 8.1865e-01 
+2024-12-12 17:33:52,826 INFO: [Decom..][epoch:519, iter:  31,200, lr:(2.000e-04,2.000e-04,)] [eta: 13:01:06, time (data): 0.165 (0.003)] l_pix: 1.9513e-02 l_percep: 1.0100e+00 
+2024-12-12 17:34:09,968 INFO: [Decom..][epoch:521, iter:  31,300, lr:(2.000e-04,2.000e-04,)] [eta: 13:00:46, time (data): 0.169 (0.008)] l_pix: 2.2477e-02 l_percep: 1.1049e+00 
+2024-12-12 17:34:27,088 INFO: [Decom..][epoch:523, iter:  31,400, lr:(2.000e-04,2.000e-04,)] [eta: 13:00:26, time (data): 0.173 (0.010)] l_pix: 2.9913e-02 l_percep: 9.7625e-01 
+2024-12-12 17:34:43,921 INFO: [Decom..][epoch:524, iter:  31,500, lr:(2.000e-04,2.000e-04,)] [eta: 13:00:03, time (data): 0.170 (0.007)] l_pix: 1.7884e-02 l_percep: 1.0540e+00 
+2024-12-12 17:35:01,045 INFO: [Decom..][epoch:526, iter:  31,600, lr:(2.000e-04,2.000e-04,)] [eta: 12:59:43, time (data): 0.171 (0.010)] l_pix: 2.0614e-02 l_percep: 7.3277e-01 
+2024-12-12 17:35:18,101 INFO: [Decom..][epoch:528, iter:  31,700, lr:(2.000e-04,2.000e-04,)] [eta: 12:59:23, time (data): 0.171 (0.010)] l_pix: 2.2760e-02 l_percep: 1.0747e+00 
+2024-12-12 17:35:34,848 INFO: [Decom..][epoch:529, iter:  31,800, lr:(2.000e-04,2.000e-04,)] [eta: 12:58:59, time (data): 0.165 (0.003)] l_pix: 2.1131e-02 l_percep: 9.4014e-01 
+2024-12-12 17:35:51,886 INFO: [Decom..][epoch:531, iter:  31,900, lr:(2.000e-04,2.000e-04,)] [eta: 12:58:39, time (data): 0.169 (0.007)] l_pix: 1.9502e-02 l_percep: 1.0855e+00 
+2024-12-12 17:36:09,002 INFO: [Decom..][epoch:533, iter:  32,000, lr:(2.000e-04,2.000e-04,)] [eta: 12:58:19, time (data): 0.173 (0.011)] l_pix: 1.8234e-02 l_percep: 9.4737e-01 
+2024-12-12 17:36:09,004 INFO: Saving models and training states.
+2024-12-12 17:36:12,580 INFO: Validation ValSet,		 # psnr: 23.6250	 # ssim: 0.8313
+2024-12-12 17:36:29,390 INFO: [Decom..][epoch:534, iter:  32,100, lr:(2.000e-04,2.000e-04,)] [eta: 12:58:26, time (data): 0.169 (0.008)] l_pix: 2.8433e-02 l_percep: 1.0051e+00 
+2024-12-12 17:36:46,463 INFO: [Decom..][epoch:536, iter:  32,200, lr:(2.000e-04,2.000e-04,)] [eta: 12:58:06, time (data): 0.171 (0.011)] l_pix: 2.1737e-02 l_percep: 1.0942e+00 
+2024-12-12 17:37:03,536 INFO: [Decom..][epoch:538, iter:  32,300, lr:(2.000e-04,2.000e-04,)] [eta: 12:57:45, time (data): 0.171 (0.010)] l_pix: 2.4658e-02 l_percep: 1.0624e+00 
+2024-12-12 17:37:20,316 INFO: [Decom..][epoch:539, iter:  32,400, lr:(2.000e-04,2.000e-04,)] [eta: 12:57:22, time (data): 0.165 (0.003)] l_pix: 2.4432e-02 l_percep: 9.6584e-01 
+2024-12-12 17:37:37,318 INFO: [Decom..][epoch:541, iter:  32,500, lr:(2.000e-04,2.000e-04,)] [eta: 12:57:01, time (data): 0.169 (0.007)] l_pix: 2.2552e-02 l_percep: 7.6953e-01 
+2024-12-12 17:37:54,295 INFO: [Decom..][epoch:543, iter:  32,600, lr:(2.000e-04,2.000e-04,)] [eta: 12:56:40, time (data): 0.172 (0.011)] l_pix: 2.0460e-02 l_percep: 9.7263e-01 
+2024-12-12 17:38:11,061 INFO: [Decom..][epoch:544, iter:  32,700, lr:(2.000e-04,2.000e-04,)] [eta: 12:56:17, time (data): 0.169 (0.007)] l_pix: 2.3106e-02 l_percep: 9.1945e-01 
+2024-12-12 17:38:28,443 INFO: [Decom..][epoch:546, iter:  32,800, lr:(2.000e-04,2.000e-04,)] [eta: 12:56:00, time (data): 0.167 (0.003)] l_pix: 2.8168e-02 l_percep: 8.9296e-01 
+2024-12-12 17:38:45,706 INFO: [Decom..][epoch:548, iter:  32,900, lr:(2.000e-04,2.000e-04,)] [eta: 12:55:41, time (data): 0.171 (0.008)] l_pix: 2.1890e-02 l_percep: 9.7560e-01 
+2024-12-12 17:39:02,652 INFO: [Decom..][epoch:549, iter:  33,000, lr:(2.000e-04,2.000e-04,)] [eta: 12:55:20, time (data): 0.165 (0.003)] l_pix: 2.8929e-02 l_percep: 1.1060e+00 
+2024-12-12 17:39:02,654 INFO: Saving models and training states.
+2024-12-12 17:39:06,257 INFO: Validation ValSet,		 # psnr: 23.7152	 # ssim: 0.8386
+2024-12-12 17:39:23,317 INFO: [Decom..][epoch:551, iter:  33,100, lr:(2.000e-04,2.000e-04,)] [eta: 12:55:28, time (data): 0.169 (0.008)] l_pix: 2.5500e-02 l_percep: 9.3331e-01 
+2024-12-12 17:39:40,473 INFO: [Decom..][epoch:553, iter:  33,200, lr:(2.000e-04,2.000e-04,)] [eta: 12:55:09, time (data): 0.175 (0.011)] l_pix: 1.9978e-02 l_percep: 8.4330e-01 
+2024-12-12 17:39:57,177 INFO: [Decom..][epoch:554, iter:  33,300, lr:(2.000e-04,2.000e-04,)] [eta: 12:54:45, time (data): 0.169 (0.008)] l_pix: 2.6080e-02 l_percep: 8.7437e-01 
+2024-12-12 17:40:14,208 INFO: [Decom..][epoch:556, iter:  33,400, lr:(2.000e-04,2.000e-04,)] [eta: 12:54:25, time (data): 0.164 (0.003)] l_pix: 2.8085e-02 l_percep: 9.9006e-01 
+2024-12-12 17:40:31,357 INFO: [Decom..][epoch:558, iter:  33,500, lr:(2.000e-04,2.000e-04,)] [eta: 12:54:05, time (data): 0.170 (0.008)] l_pix: 1.8869e-02 l_percep: 8.0696e-01 
+2024-12-12 17:40:48,250 INFO: [Decom..][epoch:559, iter:  33,600, lr:(2.000e-04,2.000e-04,)] [eta: 12:53:43, time (data): 0.165 (0.003)] l_pix: 2.5653e-02 l_percep: 1.0331e+00 
+2024-12-12 17:41:05,354 INFO: [Decom..][epoch:561, iter:  33,700, lr:(2.000e-04,2.000e-04,)] [eta: 12:53:23, time (data): 0.170 (0.008)] l_pix: 2.2029e-02 l_percep: 9.9711e-01 
+2024-12-12 17:41:22,489 INFO: [Decom..][epoch:563, iter:  33,800, lr:(2.000e-04,2.000e-04,)] [eta: 12:53:04, time (data): 0.175 (0.014)] l_pix: 2.4212e-02 l_percep: 9.0669e-01 
+2024-12-12 17:41:39,371 INFO: [Decom..][epoch:564, iter:  33,900, lr:(2.000e-04,2.000e-04,)] [eta: 12:52:42, time (data): 0.170 (0.008)] l_pix: 1.7423e-02 l_percep: 1.0870e+00 
+2024-12-12 17:41:56,472 INFO: [Decom..][epoch:566, iter:  34,000, lr:(2.000e-04,2.000e-04,)] [eta: 12:52:22, time (data): 0.164 (0.003)] l_pix: 2.2294e-02 l_percep: 9.3382e-01 
+2024-12-12 17:41:56,474 INFO: Saving models and training states.
+2024-12-12 17:41:59,974 INFO: Validation ValSet,		 # psnr: 23.8053	 # ssim: 0.8290
+2024-12-12 17:42:17,097 INFO: [Decom..][epoch:568, iter:  34,100, lr:(2.000e-04,2.000e-04,)] [eta: 12:52:30, time (data): 0.169 (0.008)] l_pix: 1.8984e-02 l_percep: 8.6566e-01 
+2024-12-12 17:42:33,885 INFO: [Decom..][epoch:569, iter:  34,200, lr:(2.000e-04,2.000e-04,)] [eta: 12:52:07, time (data): 0.165 (0.003)] l_pix: 2.8342e-02 l_percep: 1.0163e+00 
+2024-12-12 17:42:51,171 INFO: [Decom..][epoch:571, iter:  34,300, lr:(2.000e-04,2.000e-04,)] [eta: 12:51:49, time (data): 0.171 (0.008)] l_pix: 2.9334e-02 l_percep: 1.0808e+00 
+2024-12-12 17:43:08,405 INFO: [Decom..][epoch:573, iter:  34,400, lr:(2.000e-04,2.000e-04,)] [eta: 12:51:30, time (data): 0.178 (0.014)] l_pix: 2.3037e-02 l_percep: 1.0562e+00 
+2024-12-12 17:43:25,323 INFO: [Decom..][epoch:574, iter:  34,500, lr:(2.000e-04,2.000e-04,)] [eta: 12:51:08, time (data): 0.171 (0.008)] l_pix: 2.4285e-02 l_percep: 1.2522e+00 
+2024-12-12 17:43:42,552 INFO: [Decom..][epoch:576, iter:  34,600, lr:(2.000e-04,2.000e-04,)] [eta: 12:50:49, time (data): 0.163 (0.003)] l_pix: 1.9665e-02 l_percep: 1.1389e+00 
+2024-12-12 17:43:59,761 INFO: [Decom..][epoch:578, iter:  34,700, lr:(2.000e-04,2.000e-04,)] [eta: 12:50:30, time (data): 0.170 (0.009)] l_pix: 2.7515e-02 l_percep: 1.0690e+00 
+2024-12-12 17:44:16,572 INFO: [Decom..][epoch:579, iter:  34,800, lr:(2.000e-04,2.000e-04,)] [eta: 12:50:08, time (data): 0.165 (0.003)] l_pix: 2.5488e-02 l_percep: 1.1671e+00 
+2024-12-12 17:44:33,763 INFO: [Decom..][epoch:581, iter:  34,900, lr:(2.000e-04,2.000e-04,)] [eta: 12:49:49, time (data): 0.170 (0.008)] l_pix: 2.3496e-02 l_percep: 1.0674e+00 
+2024-12-12 17:44:50,959 INFO: [Decom..][epoch:583, iter:  35,000, lr:(2.000e-04,2.000e-04,)] [eta: 12:49:30, time (data): 0.179 (0.016)] l_pix: 2.6493e-02 l_percep: 1.1519e+00 
+2024-12-12 17:44:50,961 INFO: Saving models and training states.
+2024-12-12 17:44:54,582 INFO: Validation ValSet,		 # psnr: 23.7420	 # ssim: 0.8312
+2024-12-12 17:45:11,442 INFO: [Decom..][epoch:584, iter:  35,100, lr:(2.000e-04,2.000e-04,)] [eta: 12:49:36, time (data): 0.171 (0.008)] l_pix: 2.3707e-02 l_percep: 1.1140e+00 
+2024-12-12 17:45:28,554 INFO: [Decom..][epoch:586, iter:  35,200, lr:(2.000e-04,2.000e-04,)] [eta: 12:49:16, time (data): 0.165 (0.003)] l_pix: 1.9993e-02 l_percep: 8.2989e-01 
