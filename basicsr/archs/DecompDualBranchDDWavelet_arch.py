@@ -52,9 +52,6 @@ def deconv_up(in_channels):
 
 
 ### Custom MyDecomp class ###
-# This class will inherit from the chosen Decomp model (model1, model2, model3, or model4)
-# and override forward to return Q1_w, Q2_w before IWT and smoothing.
-# We do not define smoothing layers or use them. We load weights with strict=False.
 def create_my_decomp(decomp_model):
     if decomp_model == 'model1':
         from basicsr.QD.model1 import Decomp as BaseDecomp
@@ -81,7 +78,7 @@ def create_my_decomp(decomp_model):
                 del self.smooth_q2
 
         def forward(self, inp_img):
-            # This forward is a modified version that stops before IWT and smoothing.
+            # This forward stops before IWT and smoothing.
             eps = 1e-7
             R, G, B = torch.split(inp_img, 1, dim=1)
             rgbMax = torch.max(inp_img, dim=1, keepdim=True)[0]
@@ -101,7 +98,8 @@ def create_my_decomp(decomp_model):
                                       q1_k, q2_k], dim=1)
 
             if self.use_wavelets:
-                input_tensor = self.dwt(input_tensor)  # Nx8x(H/2)x(W/2)
+                # Nx8 -> Nx32 (8*4) after DWT
+                input_tensor = self.dwt(input_tensor)
 
             feat = self.conv_in(input_tensor)
             q1_feat = self.branch_q1(feat) + feat
@@ -114,14 +112,24 @@ def create_my_decomp(decomp_model):
 
             sharp_map = self.sharpening(out)
             out = out + sharp_map
-            # Do NOT perform IWT or smoothing here.
-            # out shape: Nx8x(H/2)x(W/2) in wavelet domain
+            # out shape: Nx32x(H/2)x(W/2) in wavelet domain
 
-            # Split Q1 and Q2
-            q1_w = out[:, [0, 2, 4, 6], :, :]
-            q2_w = out[:, [1, 3, 5, 7], :, :]
+            # Correct extraction of Q1 and Q2 from the 32-channel wavelet output:
+            # Channels are arranged in 4 sub-bands (LL, HL, LH, HH), each with 8 channels.
+            # Within each sub-band: Q1 are [0,2,4,6] and Q2 are [1,3,5,7].
+            q1_w_indices = [0, 2, 4, 6,
+                            8, 10, 12, 14,
+                            16, 18, 20, 22,
+                            24, 26, 28, 30]
+            q2_w_indices = [1, 3, 5, 7,
+                            9, 11, 13, 15,
+                            17, 19, 21, 23,
+                            25, 27, 29, 31]
 
-            return q1_w, q2_w  # wavelet domain Q1/Q2
+            q1_w = out[:, q1_w_indices, :, :]
+            q2_w = out[:, q2_w_indices, :, :]
+
+            return q1_w, q2_w
 
     # Instantiate and load weights
     my_decomp = MyDecomp(use_wavelets=True)
@@ -137,14 +145,6 @@ def create_my_decomp(decomp_model):
 
 @ARCH_REGISTRY.register()
 class DecompDualBranchDDWavelet(nn.Module):
-    """
-    DecompDualBranchDDWavelet:
-    Similar to previous but we now rely on a modified decomposition model (MyDecomp) that
-    already returns Q1 and Q2 in wavelet domain. We just concatenate image and condition Q1/Q2,
-    run them through dual-branch encoders/decoders in the wavelet domain, then apply IWT
-    and the Hamilton product at the end.
-    """
-
     def __init__(
         self,
         in_channels=3,
@@ -172,13 +172,12 @@ class DecompDualBranchDDWavelet(nn.Module):
         # Use the custom MyDecomp
         self.decomp = create_my_decomp(decomp_model)
 
-        # Wavelet domain Q1/Q2 each have 4 channels after decomposition (Q1_w Nx4, Q2_w Nx4).
-        # After concatenating img and cond: Nx8 for Q1 and Nx8 for Q2.
-        in_channels_branch = 8
-        # We want to output Nx8 again (4 Q1 + 4 Q2 for each branch final),
-        # but after decoding we produce Nx8 and then split into Q1_out_w Nx4 and Q2_out_w Nx4.
-        # Actually, the model outputs Q1_out_w Nx4 and Q2_out_w Nx4 at the end. So final projection is Nx4.
-        out_channels_branch = 4
+        # After decomposition, Q1 and Q2 are Nx16 (4 components * 4 sub-bands),
+        # but we only use Nx4 per quaternion after final IWT. For the encoder/decoder,
+        # we are working with wavelet domain Q1 and Q2 each Nx4 (one sub-band group)
+        # Actually we handle Nx8 because Q1 and Q2 from image and condition are concatenated.
+        in_channels_branch = 32
+        out_channels_branch = 16
 
         if use_pixelshuffle:
             down_layer = conv_down
@@ -187,7 +186,7 @@ class DecompDualBranchDDWavelet(nn.Module):
             down_layer = conv_down
             up_layer = deconv_up
 
-        # --- Encoder for Q1 ---
+        # Encoder Q1
         self.first_conv_Q1 = nn.Conv2d(in_channels_branch, n_feat, 3, 1, 1, bias=True)
         nn.init.kaiming_normal_(self.first_conv_Q1.weight, mode="fan_out", nonlinearity="linear")
         if self.first_conv_Q1.bias is not None:
@@ -200,7 +199,7 @@ class DecompDualBranchDDWavelet(nn.Module):
             curr_dim *= 2
         self.down_layers_Q1 = nn.ModuleList([down_layer(n_feat * (2 ** i)) for i in range(self.num_levels - 1)])
 
-        # --- Encoder for Q2 ---
+        # Encoder Q2
         self.first_conv_Q2 = nn.Conv2d(in_channels_branch, n_feat, 3, 1, 1, bias=True)
         nn.init.kaiming_normal_(self.first_conv_Q2.weight, mode="fan_out", nonlinearity="linear")
         if self.first_conv_Q2.bias is not None:
@@ -213,7 +212,7 @@ class DecompDualBranchDDWavelet(nn.Module):
             curr_dim *= 2
         self.down_layers_Q2 = nn.ModuleList([down_layer(n_feat * (2 ** i)) for i in range(self.num_levels - 1)])
 
-        # --- Bottleneck ---
+        # Bottleneck
         fused_dim = curr_dim * 2
         self.bottleneck_fuse = nn.Conv2d(fused_dim, curr_dim, 1, 1, bias=False)
         self.bottleneck_block = self._make_level(curr_dim, num_blocks[-1], d_state[-1], ssm_ratio, mlp_ratio, mlp_type)
@@ -221,7 +220,7 @@ class DecompDualBranchDDWavelet(nn.Module):
         self.bottleneck_to_Q1 = nn.Conv2d(curr_dim, curr_dim, 1, 1, bias=False)
         self.bottleneck_to_Q2 = nn.Conv2d(curr_dim, curr_dim, 1, 1, bias=False)
 
-        # --- Decoder for Q1 ---
+        # Decoder Q1
         dec_curr_dim = curr_dim
         self.decoders_Q1 = nn.ModuleList()
         for i in range(self.num_levels - 2, -1, -1):
@@ -235,7 +234,7 @@ class DecompDualBranchDDWavelet(nn.Module):
         if self.proj_Q1.bias is not None:
             nn.init.zeros_(self.proj_Q1.bias)
 
-        # --- Decoder for Q2 ---
+        # Decoder Q2
         dec_curr_dim = curr_dim
         self.decoders_Q2 = nn.ModuleList()
         for i in range(self.num_levels - 2, -1, -1):
@@ -304,17 +303,16 @@ class DecompDualBranchDDWavelet(nn.Module):
         img = x[:, 0:3, :, :]
         cond = x[:, 3:6, :, :]
 
-        # Decompose into Q1_w/Q2_w in wavelet domain using MyDecomp
+        # Decompose into Q1_w/Q2_w in wavelet domain
         with torch.no_grad():
-            Q1_img_w, Q2_img_w = self.decomp(img)     # Nx4x(H/2)x(W/2)
-            Q1_cond_w, Q2_cond_w = self.decomp(cond)  # Nx4x(H/2)x(W/2)
+            Q1_img_w, Q2_img_w = self.decomp(img)     # Nx16 wavelet channels if needed, but here Nx4 after indexing
+            Q1_cond_w, Q2_cond_w = self.decomp(cond)
 
-        # Concatenate along channel dimension
-        # Q1: Nx8x(H/2)x(W/2), Q2: Nx8x(H/2)x(W/2)
+        # Concatenate: Q1 and Q2 each Nx8 channels now
         Q1 = torch.cat([Q1_img_w, Q1_cond_w], dim=1)
         Q2 = torch.cat([Q2_img_w, Q2_cond_w], dim=1)
 
-        # --- Encoder forward Q1 ---
+        # Encoder Q1
         fea_Q1 = self.first_conv_Q1(Q1)
         skip_connections_Q1 = []
         curr_feat_Q1 = fea_Q1
@@ -323,7 +321,7 @@ class DecompDualBranchDDWavelet(nn.Module):
             skip_connections_Q1.append(curr_feat_Q1)
             curr_feat_Q1 = self.down_layers_Q1[i](curr_feat_Q1)
 
-        # --- Encoder forward Q2 ---
+        # Encoder Q2
         fea_Q2 = self.first_conv_Q2(Q2)
         skip_connections_Q2 = []
         curr_feat_Q2 = fea_Q2
@@ -332,7 +330,7 @@ class DecompDualBranchDDWavelet(nn.Module):
             skip_connections_Q2.append(curr_feat_Q2)
             curr_feat_Q2 = self.down_layers_Q2[i](curr_feat_Q2)
 
-        # --- Bottleneck fusion ---
+        # Bottleneck
         fused = torch.cat([curr_feat_Q1, curr_feat_Q2], dim=1)
         fused = self.bottleneck_fuse(fused)
         fused = self.bottleneck_block(fused)
@@ -340,35 +338,34 @@ class DecompDualBranchDDWavelet(nn.Module):
         dec_start_Q1 = self.bottleneck_to_Q1(fused)
         dec_start_Q2 = self.bottleneck_to_Q2(fused)
 
-        # --- Decoder forward Q1 ---
+        # Decoder Q1
         curr_feat = dec_start_Q1
         for i, dec in enumerate(self.decoders_Q1):
             skip = skip_connections_Q1[self.num_levels - 2 - i]
             curr_feat = dec['up'](curr_feat)
             curr_feat = dec['fuse'](torch.cat([curr_feat, skip], dim=1))
             curr_feat = dec['block'](curr_feat)
-        Q1_out_w = self.proj_Q1(curr_feat)  # Nx4x(H/2)x(W/2)
+        Q1_out_w = self.proj_Q1(curr_feat)
         Q1_out_w = self.last_act(Q1_out_w)
 
-        # --- Decoder forward Q2 ---
+        # Decoder Q2
         curr_feat = dec_start_Q2
         for i, dec in enumerate(self.decoders_Q2):
             skip = skip_connections_Q2[self.num_levels - 2 - i]
             curr_feat = dec['up'](curr_feat)
             curr_feat = dec['fuse'](torch.cat([curr_feat, skip], dim=1))
             curr_feat = dec['block'](curr_feat)
-        Q2_out_w = self.proj_Q2(curr_feat)  # Nx4x(H/2)x(W/2)
+        Q2_out_w = self.proj_Q2(curr_feat)
         Q2_out_w = self.last_act(Q2_out_w)
 
-        # Apply IWT to go back to spatial domain Nx4xHxW
+        # Apply IWT to return to spatial domain
         Q1_out = self.iwt(Q1_out_w)
         Q2_out = self.iwt(Q2_out_w)
 
-        # --- Hamilton product ---
+        # Hamilton product
         out_quat = hamilton_product(Q1_out, Q2_out)  # Nx4xHxW
-        final_out = out_quat[:, 1:, :, :]  # Nx3xHxW
+        final_out = out_quat[:, 1:, :, :]
 
-        # Return x (same 6 channels as input) and final_out (3 channels)
         return [x, final_out]
 
 
