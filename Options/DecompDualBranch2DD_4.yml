@@ -1,5 +1,5 @@
 # general settings
-name: DecompDualBranch2DD_1
+name: DecompDualBranch2DD_4
 model_type: ImageEnhancer
 scale: 1
 num_gpu: 1  # set num_gpu: 0 for cpu mode

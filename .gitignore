@@ -9,4 +9,6 @@ basicsr/QD/runs
 basicsr.egg-info/
 kernels/selective_scan/build/
 kernels/selective_scan/selective_scan.egg-info/
+results/
+weights_LOLv1/
 

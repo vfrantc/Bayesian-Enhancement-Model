@@ -1,5 +1,18 @@
 # Quaternion Retinex Decomposition
 
+
+
+Final models
+
+```bash
+CUDA_VISIBLE_DEVICES=0 nohup python3 basicsr/train.py --opt Options/DecompDualBranch2DD_4.yml --auto_resume > log_DDfinal.out 2>&1 &
+CUDA_VISIBLE_DEVICES=1 nohup python3 basicsr/train.py --opt Options/DecompDualBranch2DDWavelet_4.yml --auto_resume > log_DDWavelet.out 2>&1 &
+
+CUDA_VISIBLE_DEVICES=1 python3 Enhancement/eval.py --opt weights_LOLv1/CG_UNet_LOLv1/CG_UNet_LOLv1.yml --weights weights_LOLv1/CG_UNet_LOLv1/ckpt.pth --cond_opt Options/DecompDualBranch2DDWavelet_4.yml --cond_weights experiments/DecompDualBranch2DDWavelet_4/best_psnr_28.73_139000.pth --lpips --dataset LOLv1 --GT_mean --no_ref=clip
+
+```
+
+
 ## Dependencies and Installation
 
 - Python 3.10.12
@@ -158,13 +171,6 @@ CUDA_VISIBLE_DEVICES=4 nohup python3 basicsr/train.py --opt Options/DecompDualBr
 CUDA_VISIBLE_DEVICES=5 nohup python3 basicsr/train.py --opt Options/DecompDualBranch2DD_4.yml > log_DecompDualBranch2DD_4.out 2>&1 &
 CUDA_VISIBLE_DEVICES=6 nohup python3 basicsr/train.py --opt Options/DecompSingleBranchDD_1.yml > log_DecompSingleBranchDD_1.out 2>&1 &
 CUDA_VISIBLE_DEVICES=7 nohup python3 basicsr/train.py --opt Options/DecompSingleBranchDD_4.yml > log_DecompSingleBranchDD_4.out 2>&1 &
-```
-
-I will continue training this two, as they offered the best results:
-
-```bash
-CUDA_VISIBLE_DEVICES=0 nohup python3 basicsr/train.py --opt Options/DecompDualBranch2_1.yml --auto_resume > log_DecompDualBranch2_1.out 2>&1 &
-CUDA_VISIBLE_DEVICES=1 nohup python3 basicsr/train.py --opt Options/DecompDualBranch2DD_4.yml --auto_resume > log_DecompDualBranch2DD_4.out 2>&1 &
 ```
 
 And now I will train model 1 and model 4 on dual branch:
